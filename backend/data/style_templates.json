@@ -1,0 +1,128 @@
+{
+  "casual": {
+    "name": "休闲风",
+    "combinations": [
+      {
+        "title": "舒适日常",
+        "items": [
+          "shirt",
+          "pants",
+          "shoes"
+        ],
+        "colors": [
+          "blue",
+          "white",
+          "black"
+        ],
+        "tips": [
+          "选择舒适面料",
+          "颜色搭配简洁",
+          "适合日常出行"
+        ]
+      },
+      {
+        "title": "轻松周末",
+        "items": [
+          "shirt",
+          "jacket",
+          "pants"
+        ],
+        "colors": [
+          "gray",
+          "white",
+          "blue"
+        ],
+        "tips": [
+          "层次搭配有趣",
+          "适合休闲场合",
+          "舒适度优先"
+        ]
+      }
+    ]
+  },
+  "formal": {
+    "name": "正式风",
+    "combinations": [
+      {
+        "title": "商务精英",
+        "items": [
+          "shirt",
+          "jacket",
+          "pants",
+          "shoes"
+        ],
+        "colors": [
+          "black",
+          "white",
+          "gray"
+        ],
+        "tips": [
+          "经典商务搭配",
+          "颜色沉稳大气",
+          "适合工作场合"
+        ]
+      },
+      {
+        "title": "优雅正装",
+        "items": [
+          "dress",
+          "jacket",
+          "shoes"
+        ],
+        "colors": [
+          "navy",
+          "black",
+          "white"
+        ],
+        "tips": [
+          "简约而不简单",
+          "展现专业形象",
+          "细节决定成败"
+        ]
+      }
+    ]
+  },
+  "trendy": {
+    "name": "时尚风",
+    "combinations": [
+      {
+        "title": "街头潮流",
+        "items": [
+          "shirt",
+          "jacket",
+          "pants",
+          "accessory"
+        ],
+        "colors": [
+          "red",
+          "black",
+          "white"
+        ],
+        "tips": [
+          "大胆色彩搭配",
+          "个性配饰点缀",
+          "展现时尚态度"
+        ]
+      },
+      {
+        "title": "都市摩登",
+        "items": [
+          "dress",
+          "jacket",
+          "shoes",
+          "accessory"
+        ],
+        "colors": [
+          "pink",
+          "gray",
+          "black"
+        ],
+        "tips": [
+          "现代感十足",
+          "配饰提升层次",
+          "适合都市生活"
+        ]
+      }
+    ]
+  }
+}

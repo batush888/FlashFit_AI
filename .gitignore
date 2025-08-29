@@ -1,0 +1,61 @@
+node_modules
+.env
+#Environment and Configuration Files:
+.env.example
+.env.local
+.env.production
+.env.staging
+*.env (catches all environment files)
+config.json (if containing secrets)
+secrets.json
+#Security Keys and Certificates:
+
+*.key
+*.pem
+*.crt
+*.p12
+*.pfx
+jwt_secret.txt
+private_keys/
+#Database and Cache Files:
+
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb (Redis dump)
+redis.log
+#Logs and Temporary Files:
+
+logs/
+*.log
+tmp/
+temp/
+cache/
+#Python-Specific Security:
+
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+#ML Models and Data:
+
+models/*.pkl (trained models may contain sensitive data)
+data/users.json (contains user data)
+data/uploads/ (user uploaded files)
+*.model
+*.weights
+
+#IDE and OS Files:
+
+.DS_Store
+Thumbs.db
+.vscode/settings.json (may contain paths)
+.idea/
+
+#Docker and Deployment:
+
+docker-compose.override.yml
+.dockerignore (if containing sensitive paths)

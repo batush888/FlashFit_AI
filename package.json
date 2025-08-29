@@ -1,0 +1,14 @@
+{
+  "name": "flashfit-proxy",
+  "version": "1.0.0",
+  "description": "Proxy server to run frontend and backend on same port",
+  "main": "proxy-server.js",
+  "scripts": {
+    "start": "node proxy-server.js",
+    "proxy": "node proxy-server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6"
+  }
+}
