@@ -1,0 +1,198 @@
+version: '3.8'
+
+services:
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: flashfit_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./alert_rules.yml:/etc/prometheus/alert_rules.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=30d'
+      - '--web.enable-lifecycle'
+      - '--web.enable-admin-api'
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:latest
+    container_name: flashfit_grafana
+    ports:
+      - "3001:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=flashfit_admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel,grafana-worldmap-panel
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - prometheus
+
+  # AlertManager for alert handling
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: flashfit_alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml
+      - alertmanager_data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+      - '--web.external-url=http://localhost:9093'
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Node Exporter for system metrics
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: flashfit_node_exporter
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # cAdvisor for container metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: flashfit_cadvisor
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # FlashFit AI Monitoring Service
+  flashfit-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile.monitoring
+    container_name: flashfit_monitor
+    ports:
+      - "9091:9090"  # Prometheus metrics endpoint
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/monitoring/data
+      - ../logs:/app/logs
+    environment:
+      - BACKEND_URL=http://backend:8080
+      - FRONTEND_URL=http://frontend:3000
+      - PROMETHEUS_PORT=9090
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    networks:
+      - monitoring
+      - flashfit_network
+    depends_on:
+      - prometheus
+
+  # Redis for caching monitoring data
+  redis-monitor:
+    image: redis:alpine
+    container_name: flashfit_redis_monitor
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_monitor_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Elasticsearch for log aggregation
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: flashfit_elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    restart: unless-stopped
+    networks:
+      - monitoring
+
+  # Kibana for log visualization
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.14.0
+    container_name: flashfit_kibana
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - elasticsearch
+
+  # Logstash for log processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.14.0
+    container_name: flashfit_logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline
+      - ./logstash/config:/usr/share/logstash/config
+    environment:
+      - "LS_JAVA_OPTS=-Xmx256m -Xms256m"
+    restart: unless-stopped
+    networks:
+      - monitoring
+    depends_on:
+      - elasticsearch
+
+volumes:
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:
+  redis_monitor_data:
+  elasticsearch_data:
+
+networks:
+  monitoring:
+    driver: bridge
+  flashfit_network:
+    external: true

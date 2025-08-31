@@ -1,0 +1,84 @@
+{
+  "query_analysis": {
+    "image_path": "test_garment.jpg",
+    "blip_caption": "",
+    "garment_type": "服装",
+    "garment_confidence": 0.5
+  },
+  "recommendations": [
+    {
+      "id": "fallback_0",
+      "rank": 1,
+      "item_id": "template_0",
+      "image_path": "",
+      "similarity_score": 0.7,
+      "component_scores": {
+        "clip": 0.7,
+        "blip": 0.6,
+        "fashion": 0.8
+      },
+      "candidate_description": "推荐的服装搭配方案1",
+      "metadata": {
+        "type": "fallback",
+        "category": "服装"
+      }
+    },
+    {
+      "id": "fallback_1",
+      "rank": 2,
+      "item_id": "template_1",
+      "image_path": "",
+      "similarity_score": 0.6,
+      "component_scores": {
+        "clip": 0.6,
+        "blip": 0.5,
+        "fashion": 0.7000000000000001
+      },
+      "candidate_description": "推荐的服装搭配方案2",
+      "metadata": {
+        "type": "fallback",
+        "category": "服装"
+      }
+    },
+    {
+      "id": "fallback_2",
+      "rank": 3,
+      "item_id": "template_2",
+      "image_path": "",
+      "similarity_score": 0.49999999999999994,
+      "component_scores": {
+        "clip": 0.49999999999999994,
+        "blip": 0.39999999999999997,
+        "fashion": 0.6000000000000001
+      },
+      "candidate_description": "推荐的服装搭配方案3",
+      "metadata": {
+        "type": "fallback",
+        "category": "服装"
+      }
+    }
+  ],
+  "chinese_advice": {
+    "title_cn": "服装搭配建议",
+    "tips_cn": [
+      "选择合适的尺寸和剪裁",
+      "注意颜色搭配的和谐性",
+      "根据场合选择合适的风格",
+      "适当使用配饰提升造型"
+    ],
+    "occasion_advice": "建议根据具体场合和个人喜好进行调整。",
+    "style_suggestions": [
+      "暂无具体搭配数据，建议上传更多衣物建立个人衣橱。"
+    ],
+    "color_advice": "建议选择与个人肤色相配的颜色。",
+    "season_advice": "夏季建议选择透气性好的面料，浅色系更适合炎热天气。",
+    "confidence_note": "当前为基础推荐，建议完善衣橱数据以获得更精准的建议。"
+  },
+  "fusion_stats": {
+    "total_candidates": 0,
+    "processed_candidates": 0,
+    "final_recommendations": 3,
+    "note": "Fallback recommendations - vector store empty"
+  },
+  "timestamp": "2025-08-30T20:17:00.523071"
+}

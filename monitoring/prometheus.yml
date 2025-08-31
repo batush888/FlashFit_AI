@@ -1,64 +1,137 @@
-# Prometheus Configuration for FlashFit AI
+# Prometheus configuration for FlashFit AI monitoring
 
 global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    monitor: 'flashfit-monitor'
+    cluster: 'flashfit-ai'
+    environment: 'production'
 
 rule_files:
-  # - "first_rules.yml"
-  # - "second_rules.yml"
+  - "alert_rules.yml"
 
-scrape_configs:
-  # Prometheus itself
-  - job_name: 'prometheus'
-    static_configs:
-      - targets: ['localhost:9090']
-
-  # Backend API metrics
-  - job_name: 'flashfit-backend'
-    static_configs:
-      - targets: ['backend:8000']
-    metrics_path: '/metrics'
-    scrape_interval: 30s
-    scrape_timeout: 10s
-
-  # Frontend metrics (if implemented)
-  - job_name: 'flashfit-frontend'
-    static_configs:
-      - targets: ['frontend:80']
-    metrics_path: '/metrics'
-    scrape_interval: 60s
-    scrape_timeout: 10s
-
-  # Nginx metrics (if nginx-prometheus-exporter is used)
-  - job_name: 'nginx'
-    static_configs:
-      - targets: ['nginx:9113']
-    scrape_interval: 30s
-
-  # Redis metrics (if redis_exporter is used)
-  - job_name: 'redis'
-    static_configs:
-      - targets: ['redis:6379']
-    scrape_interval: 30s
-
-  # Node exporter for system metrics (if deployed)
-  - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['node-exporter:9100']
-    scrape_interval: 30s
-
-# Alerting configuration
 alerting:
   alertmanagers:
     - static_configs:
         - targets:
-          # - alertmanager:9093
+          - alertmanager:9093
 
-# Storage configuration
-storage:
-  tsdb:
-    retention.time: 15d
-    retention.size: 10GB
+scrape_configs:
+  # FlashFit AI Backend API
+  - job_name: 'flashfit-backend'
+    static_configs:
+      - targets: ['backend:8080']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-backend'
+
+  # FlashFit AI Frontend
+  - job_name: 'flashfit-frontend'
+    static_configs:
+      - targets: ['frontend:3000']
+    metrics_path: '/api/metrics'
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-frontend'
+
+  # FlashFit AI Custom Monitoring Service
+  - job_name: 'flashfit-monitor'
+    static_configs:
+      - targets: ['flashfit-monitor:9090']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-monitor'
+
+  # System metrics via Node Exporter
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['node-exporter:9100']
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-system'
+
+  # Container metrics via cAdvisor
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-containers'
+
+  # Nginx metrics (if nginx-prometheus-exporter is enabled)
+  - job_name: 'nginx'
+    static_configs:
+      - targets: ['nginx:9113']
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-nginx'
+
+  # Redis metrics (if redis-exporter is enabled)
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis-exporter:9121']
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-redis'
+
+  # PostgreSQL metrics (if postgres-exporter is enabled)
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+    scrape_interval: 30s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-postgres'
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+    scrape_interval: 15s
+
+  # AlertManager monitoring
+  - job_name: 'alertmanager'
+    static_configs:
+      - targets: ['alertmanager:9093']
+    scrape_interval: 15s
+
+  # Grafana monitoring
+  - job_name: 'grafana'
+    static_configs:
+      - targets: ['grafana:3000']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+# Remote write configuration (optional - for long-term storage)
+# remote_write:
+#   - url: "https://prometheus-remote-write-endpoint.com/api/v1/write"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"
+
+# Remote read configuration (optional)
+# remote_read:
+#   - url: "https://prometheus-remote-read-endpoint.com/api/v1/read"
+#     basic_auth:
+#       username: "your-username"
+#       password: "your-password"

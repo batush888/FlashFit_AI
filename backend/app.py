@@ -17,6 +17,7 @@ from api.match import MatchHandler
 from api.wardrobe import WardrobeHandler
 from api.feedback import FeedbackHandler
 from api.enhanced_match import get_enhanced_match_handler
+from api.fusion_match import get_fusion_match_handler
 from api.history import OutfitHistoryHandler
 from api.social import social_handler
 
@@ -45,6 +46,7 @@ match_handler = MatchHandler()
 wardrobe_handler = WardrobeHandler()
 feedback_handler = FeedbackHandler()
 enhanced_match_handler = get_enhanced_match_handler()
+fusion_match_handler = get_fusion_match_handler()
 history_handler = OutfitHistoryHandler()
 
 # Pydantic models
@@ -107,6 +109,13 @@ class RateOutfitRequest(BaseModel):
     rating: float
     review: Optional[str] = None
 
+class FusionFeedbackRequest(BaseModel):
+    suggestion_id: str
+    liked: bool
+    clip_score: float
+    blip_score: float
+    fashion_score: float
+
 # Auth dependency
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
@@ -140,6 +149,22 @@ async def login(user: UserLogin):
         return result
     except Exception as e:
         raise HTTPException(status_code=401, detail=str(e))
+
+@app.get("/api/user/profile")
+async def get_user_profile(user_id: str = Depends(get_current_user)):
+    try:
+        user_data = auth_handler.get_user_by_id(user_id)
+        if not user_data:
+            raise HTTPException(status_code=404, detail="User not found")
+        # Return user profile without sensitive data
+        return {
+            "user_id": user_data.get("user_id"),
+            "email": user_data.get("email"),
+            "created_at": user_data.get("created_at"),
+            "preferences": user_data.get("preferences", {})
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Upload endpoint
 @app.post("/api/upload")
@@ -457,6 +482,49 @@ async def get_social_stats(
         return result
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+# Multi-model fusion recommendation endpoints
+@app.post("/api/fusion/match")
+async def fusion_match(
+    file: UploadFile = File(...),
+    target_count: int = 3
+):
+    """
+    Multi-model fusion recommendation endpoint
+    Accepts uploaded image and returns recommendations using CLIP, BLIP, and Fashion encoders
+    """
+    try:
+        return await fusion_match_handler.match_with_fusion(file, target_count)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/fusion/feedback")
+async def fusion_feedback(
+    request: FusionFeedbackRequest
+):
+    """
+    Add user feedback for fusion recommendation learning
+    """
+    try:
+        return await fusion_match_handler.add_feedback(
+            suggestion_id=request.suggestion_id,
+            liked=request.liked,
+            clip_score=request.clip_score,
+            blip_score=request.blip_score,
+            fashion_score=request.fashion_score
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/fusion/stats")
+async def fusion_stats():
+    """
+    Get fusion recommendation service statistics
+    """
+    try:
+        return fusion_match_handler.get_service_stats()
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     uvicorn.run(

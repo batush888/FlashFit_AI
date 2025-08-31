@@ -1,0 +1,319 @@
+# FlashFit AI Alert Rules for Prometheus
+
+groups:
+  - name: flashfit_system_alerts
+    rules:
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High CPU usage detected"
+          description: "CPU usage is above 80% for more than 5 minutes on {{ $labels.instance }}"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: (node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is above 85% for more than 5 minutes on {{ $labels.instance }}"
+
+      # High disk usage
+      - alert: HighDiskUsage
+        expr: (node_filesystem_size_bytes - node_filesystem_avail_bytes) / node_filesystem_size_bytes * 100 > 90
+        for: 10m
+        labels:
+          severity: critical
+          service: system
+        annotations:
+          summary: "High disk usage detected"
+          description: "Disk usage is above 90% for more than 10 minutes on {{ $labels.instance }}"
+
+      # System load average
+      - alert: HighSystemLoad
+        expr: node_load15 > 2
+        for: 10m
+        labels:
+          severity: warning
+          service: system
+        annotations:
+          summary: "High system load detected"
+          description: "15-minute load average is above 2.0 on {{ $labels.instance }}"
+
+  - name: flashfit_api_alerts
+    rules:
+      # API service down
+      - alert: APIServiceDown
+        expr: up{job="flashfit-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "FlashFit API service is down"
+          description: "FlashFit API service has been down for more than 1 minute"
+
+      # High API response time
+      - alert: HighAPIResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job="flashfit-backend"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is above 2 seconds for {{ $labels.endpoint }}"
+
+      # High API error rate
+      - alert: HighAPIErrorRate
+        expr: rate(http_requests_total{job="flashfit-backend",status_code=~"5.."}[5m]) / rate(http_requests_total{job="flashfit-backend"}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          service: api
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is above 5% for more than 5 minutes on {{ $labels.endpoint }}"
+
+      # Low API request rate (potential issue)
+      - alert: LowAPIRequestRate
+        expr: rate(http_requests_total{job="flashfit-backend"}[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+          service: api
+        annotations:
+          summary: "Low API request rate"
+          description: "API request rate is unusually low (< 0.1 req/sec) for more than 10 minutes"
+
+  - name: flashfit_model_alerts
+    rules:
+      # High model inference time
+      - alert: HighModelInferenceTime
+        expr: histogram_quantile(0.95, rate(model_inference_duration_seconds_bucket[5m])) > 3
+        for: 5m
+        labels:
+          severity: warning
+          service: ml_models
+        annotations:
+          summary: "High model inference time"
+          description: "95th percentile inference time for {{ $labels.model_name }} is above 3 seconds"
+
+      # Model error rate
+      - alert: HighModelErrorRate
+        expr: rate(model_errors_total[5m]) / rate(model_inference_duration_seconds_count[5m]) > 0.02
+        for: 5m
+        labels:
+          severity: critical
+          service: ml_models
+        annotations:
+          summary: "High model error rate"
+          description: "Model {{ $labels.model_name }} error rate is above 2% for more than 5 minutes"
+
+      # Low model hit rate
+      - alert: LowModelHitRate
+        expr: model_hit_rate < 0.3
+        for: 15m
+        labels:
+          severity: warning
+          service: ml_models
+        annotations:
+          summary: "Low model hit rate"
+          description: "Model {{ $labels.model_name }} hit rate is below 30% for more than 15 minutes"
+
+      # Model cache miss rate
+      - alert: HighModelCacheMissRate
+        expr: 1 - (rate(model_cache_hits_total[5m]) / (rate(model_cache_hits_total[5m]) + rate(model_cache_misses_total[5m]))) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          service: ml_models
+        annotations:
+          summary: "High model cache miss rate"
+          description: "Model {{ $labels.model_name }} cache miss rate is above 80% for more than 10 minutes"
+
+  - name: flashfit_vector_store_alerts
+    rules:
+      # FAISS index size growth
+      - alert: RapidFAISSIndexGrowth
+        expr: increase(faiss_index_size_bytes[1h]) > 1073741824  # 1GB growth per hour
+        for: 0m
+        labels:
+          severity: warning
+          service: vector_store
+        annotations:
+          summary: "Rapid FAISS index growth"
+          description: "FAISS index {{ $labels.index_name }} has grown by more than 1GB in the last hour"
+
+      # Vector search latency
+      - alert: HighVectorSearchLatency
+        expr: histogram_quantile(0.95, rate(vector_search_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+          service: vector_store
+        annotations:
+          summary: "High vector search latency"
+          description: "95th percentile vector search latency is above 1 second for {{ $labels.index_name }}"
+
+  - name: flashfit_feedback_alerts
+    rules:
+      # Low feedback rate
+      - alert: LowFeedbackRate
+        expr: rate(feedback_received_total[1h]) < 0.01
+        for: 2h
+        labels:
+          severity: warning
+          service: feedback_loop
+        annotations:
+          summary: "Low user feedback rate"
+          description: "User feedback rate is below 0.01 per second for more than 2 hours"
+
+      # Abnormal embedding shift
+      - alert: AbnormalEmbeddingShift
+        expr: histogram_quantile(0.95, rate(embedding_shift_magnitude_bucket[5m])) > 0.5
+        for: 10m
+        labels:
+          severity: warning
+          service: feedback_loop
+        annotations:
+          summary: "Abnormal embedding shift detected"
+          description: "95th percentile embedding shift magnitude is above 0.5 for {{ $labels.user_segment }}"
+
+  - name: flashfit_frontend_alerts
+    rules:
+      # Frontend service down
+      - alert: FrontendServiceDown
+        expr: up{job="flashfit-frontend"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: frontend
+        annotations:
+          summary: "FlashFit frontend service is down"
+          description: "FlashFit frontend service has been down for more than 2 minutes"
+
+      # High frontend error rate
+      - alert: HighFrontendErrorRate
+        expr: rate(frontend_errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+          service: frontend
+        annotations:
+          summary: "High frontend error rate"
+          description: "Frontend error rate is above 10 errors per second for {{ $labels.error_type }}"
+
+  - name: flashfit_container_alerts
+    rules:
+      # Container high memory usage
+      - alert: ContainerHighMemoryUsage
+        expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) * 100 > 90
+        for: 5m
+        labels:
+          severity: warning
+          service: containers
+        annotations:
+          summary: "Container high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 90% of limit"
+
+      # Container high CPU usage
+      - alert: ContainerHighCPUUsage
+        expr: (rate(container_cpu_usage_seconds_total[5m]) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+          service: containers
+        annotations:
+          summary: "Container high CPU usage"
+          description: "Container {{ $labels.name }} CPU usage is above 80%"
+
+      # Container restart rate
+      - alert: ContainerHighRestartRate
+        expr: increase(container_start_time_seconds[1h]) > 5
+        for: 0m
+        labels:
+          severity: warning
+          service: containers
+        annotations:
+          summary: "Container high restart rate"
+          description: "Container {{ $labels.name }} has restarted more than 5 times in the last hour"
+
+  - name: flashfit_business_alerts
+    rules:
+      # Low active users
+      - alert: LowActiveUsers
+        expr: active_users_count{time_window="1h"} < 5
+        for: 30m
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Low active user count"
+          description: "Active user count has been below 5 for more than 30 minutes"
+
+      # Low recommendation click-through rate
+      - alert: LowRecommendationCTR
+        expr: rate(recommendation_clicks_total[1h]) / rate(recommendations_shown_total[1h]) < 0.05
+        for: 2h
+        labels:
+          severity: warning
+          service: business
+        annotations:
+          summary: "Low recommendation click-through rate"
+          description: "Recommendation CTR is below 5% for more than 2 hours"
+
+  - name: flashfit_security_alerts
+    rules:
+      # High authentication failure rate
+      - alert: HighAuthFailureRate
+        expr: rate(auth_failures_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "High authentication failure rate"
+          description: "Authentication failure rate is above 5 per second for more than 5 minutes"
+
+      # Suspicious request patterns
+      - alert: SuspiciousRequestPattern
+        expr: rate(http_requests_total{status_code="429"}[5m]) > 10
+        for: 2m
+        labels:
+          severity: warning
+          service: security
+        annotations:
+          summary: "Suspicious request pattern detected"
+          description: "High rate of 429 (rate limited) responses detected from {{ $labels.instance }}"
+
+  - name: flashfit_data_alerts
+    rules:
+      # Database connection issues
+      - alert: DatabaseConnectionIssues
+        expr: rate(database_connection_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: critical
+          service: database
+        annotations:
+          summary: "Database connection issues"
+          description: "Database connection error rate is above 0.1 per second"
+
+      # Data pipeline lag
+      - alert: DataPipelineLag
+        expr: time() - data_pipeline_last_update_timestamp > 3600  # 1 hour lag
+        for: 0m
+        labels:
+          severity: warning
+          service: data_pipeline
+        annotations:
+          summary: "Data pipeline lag detected"
+          description: "Data pipeline {{ $labels.pipeline_name }} has not updated for more than 1 hour"

@@ -1,0 +1,95 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-08-30T19:47:41.745464",
+    "report_type": "Performance Monitoring Report",
+    "monitoring_duration_minutes": 60,
+    "total_metrics_collected": 260
+  },
+  "health_score": {
+    "overall_score": 49.4,
+    "component_scores": {
+      "api_latency": 99.96686363220215,
+      "error_rate": 0,
+      "cpu_usage": 78.58,
+      "memory_usage": 18.64
+    },
+    "health_status": "poor"
+  },
+  "performance_statistics": {
+    "api_latency": {
+      "count": 100,
+      "min": 0.3581047058105469,
+      "max": 15.006065368652344,
+      "mean": 1.6568183898925781,
+      "median": 0.6532669067382812,
+      "std_dev": 2.612394033796352,
+      "p95": 6.931591033935547,
+      "p99": 14.449732303619388
+    },
+    "cpu_usage": {
+      "count": 20,
+      "min": 13.1,
+      "max": 37.8,
+      "mean": 21.419999999999998,
+      "median": 19.65,
+      "std_dev": 6.805230186756127,
+      "p95": 32.1,
+      "p99": 36.65999999999999
+    },
+    "memory_usage": {
+      "count": 20,
+      "min": 80.8,
+      "max": 81.8,
+      "mean": 81.36,
+      "median": 81.35,
+      "std_dev": 0.30504529430716937,
+      "p95": 81.8,
+      "p99": 81.8
+    },
+    "error_rate_percent": 80.0
+  },
+  "endpoint_performance": {
+    "/health": {
+      "avg_latency_ms": 5.610501766204834,
+      "max_latency_ms": 15.006065368652344,
+      "min_latency_ms": 1.9807815551757812,
+      "request_count": 20
+    },
+    "/api/user/profile": {
+      "avg_latency_ms": 0.7826089859008789,
+      "max_latency_ms": 1.8341541290283203,
+      "min_latency_ms": 0.4551410675048828,
+      "request_count": 20
+    },
+    "/api/wardrobe": {
+      "avg_latency_ms": 0.71868896484375,
+      "max_latency_ms": 1.7499923706054688,
+      "min_latency_ms": 0.39386749267578125,
+      "request_count": 20
+    },
+    "/api/match": {
+      "avg_latency_ms": 0.5894660949707031,
+      "max_latency_ms": 1.0879039764404297,
+      "min_latency_ms": 0.3581047058105469,
+      "request_count": 20
+    },
+    "/api/history/statistics": {
+      "avg_latency_ms": 0.5828261375427246,
+      "max_latency_ms": 0.9968280792236328,
+      "min_latency_ms": 0.3807544708251953,
+      "request_count": 20
+    }
+  },
+  "active_alerts": [],
+  "alert_history": [],
+  "recommendations": [
+    "System health is below acceptable levels - investigate performance issues",
+    "High error rate detected - check application logs and fix issues",
+    "High memory usage - check for memory leaks or consider increasing resources",
+    "Set up automated alerting for critical metrics",
+    "Implement log aggregation for better debugging",
+    "Consider implementing circuit breakers for external dependencies",
+    "Set up regular performance testing and benchmarking",
+    "Monitor database performance and query optimization"
+  ]
+}

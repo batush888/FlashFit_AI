@@ -1,0 +1,194 @@
+{
+  "timestamp": "2025-08-30 19:26:35",
+  "results": [
+    {
+      "endpoint": "/api/user/profile",
+      "method": "GET",
+      "avg_latency_ms": 1.4658768971761067,
+      "min_latency_ms": 1.1818408966064453,
+      "max_latency_ms": 1.920938491821289,
+      "success_rate_percent": 100.0,
+      "total_requests": 3
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 140.83528518676758,
+      "min_latency_ms": 84.26880836486816,
+      "max_latency_ms": 249.39203262329102,
+      "success_rate_percent": 100.0,
+      "total_requests": 3
+    },
+    {
+      "endpoint": "/api/wardrobe",
+      "method": "GET",
+      "avg_latency_ms": 3.913545608520508,
+      "min_latency_ms": 3.7009716033935547,
+      "max_latency_ms": 4.180908203125,
+      "success_rate_percent": 100.0,
+      "total_requests": 5
+    },
+    {
+      "endpoint": "/api/match",
+      "method": "POST",
+      "avg_latency_ms": 1.7666816711425781,
+      "min_latency_ms": 0.9999275207519531,
+      "max_latency_ms": 3.8471221923828125,
+      "success_rate_percent": 0.0,
+      "total_requests": 5
+    },
+    {
+      "endpoint": "/health",
+      "method": "GET",
+      "avg_latency_ms": 1.1944293975830078,
+      "min_latency_ms": 0.7150173187255859,
+      "max_latency_ms": 2.370119094848633,
+      "success_rate_percent": 100.0,
+      "total_requests": 5
+    },
+    {
+      "endpoint": "/api/history/statistics",
+      "method": "GET",
+      "avg_latency_ms": 1.1432965596516926,
+      "min_latency_ms": 0.743865966796875,
+      "max_latency_ms": 1.8908977508544922,
+      "success_rate_percent": 100.0,
+      "total_requests": 3
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 91.27116203308105,
+      "min_latency_ms": 91.27116203308105,
+      "max_latency_ms": 91.27116203308105,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 187.9270076751709,
+      "min_latency_ms": 187.9270076751709,
+      "max_latency_ms": 187.9270076751709,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 272.0069885253906,
+      "min_latency_ms": 272.0069885253906,
+      "max_latency_ms": 272.0069885253906,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 353.3811569213867,
+      "min_latency_ms": 353.3811569213867,
+      "max_latency_ms": 353.3811569213867,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 441.8778419494629,
+      "min_latency_ms": 441.8778419494629,
+      "max_latency_ms": 441.8778419494629,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 533.2469940185547,
+      "min_latency_ms": 533.2469940185547,
+      "max_latency_ms": 533.2469940185547,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 627.7849674224854,
+      "min_latency_ms": 627.7849674224854,
+      "max_latency_ms": 627.7849674224854,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 714.1292095184326,
+      "min_latency_ms": 714.1292095184326,
+      "max_latency_ms": 714.1292095184326,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 813.417911529541,
+      "min_latency_ms": 813.417911529541,
+      "max_latency_ms": 813.417911529541,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 904.2692184448242,
+      "min_latency_ms": 904.2692184448242,
+      "max_latency_ms": 904.2692184448242,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 1008.1908702850342,
+      "min_latency_ms": 1008.1908702850342,
+      "max_latency_ms": 1008.1908702850342,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 1104.1638851165771,
+      "min_latency_ms": 1104.1638851165771,
+      "max_latency_ms": 1104.1638851165771,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 1204.1468620300293,
+      "min_latency_ms": 1204.1468620300293,
+      "max_latency_ms": 1204.1468620300293,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 1295.4201698303223,
+      "min_latency_ms": 1295.4201698303223,
+      "max_latency_ms": 1295.4201698303223,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    },
+    {
+      "endpoint": "/api/upload",
+      "method": "POST",
+      "avg_latency_ms": 1389.5611763000488,
+      "min_latency_ms": 1389.5611763000488,
+      "max_latency_ms": 1389.5611763000488,
+      "success_rate_percent": 100.0,
+      "total_requests": 1
+    }
+  ]
+}

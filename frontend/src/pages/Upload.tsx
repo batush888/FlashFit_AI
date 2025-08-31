@@ -1,5 +1,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { uploadService } from '../api/upload';
+import { useNotificationStore } from '../stores/notificationStore';
 
 interface UploadedFile {
   id: string;
@@ -18,6 +20,7 @@ const Upload = () => {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
+  const { addNotification } = useNotificationStore();
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -58,37 +61,72 @@ const Upload = () => {
       
       setUploadedFiles(prev => [...prev, newFile]);
       
-      // Simulate upload progress
-      simulateUpload(id);
+      // Upload file to backend
+      uploadFile(id, file);
     });
   };
 
-  const simulateUpload = (fileId: string) => {
+  const uploadFile = async (fileId: string, file: File) => {
     setIsUploading(true);
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += Math.random() * 30;
-      if (progress >= 100) {
-        progress = 100;
-        clearInterval(interval);
+    
+    try {
+      const result = await uploadService.uploadImage(
+        file,
+        undefined,
+        (progress) => {
+          setUploadedFiles(prev => 
+            prev.map(f => 
+              f.id === fileId 
+                ? { ...f, progress: progress.percentage }
+                : f
+            )
+          );
+        }
+      );
+      
+      if (result.success) {
         setUploadedFiles(prev => 
-          prev.map(file => 
-            file.id === fileId 
-              ? { ...file, progress: 100, status: 'completed' }
-              : file
+          prev.map(f => 
+            f.id === fileId 
+              ? { ...f, progress: 100, status: 'completed' }
+              : f
           )
         );
-        setIsUploading(false);
+        addNotification({
+          type: 'success',
+          title: 'Upload Successful',
+          message: `${file.name} has been uploaded successfully.`
+        });
       } else {
         setUploadedFiles(prev => 
-          prev.map(file => 
-            file.id === fileId 
-              ? { ...file, progress }
-              : file
+          prev.map(f => 
+            f.id === fileId 
+              ? { ...f, status: 'error' }
+              : f
           )
         );
+        addNotification({
+          type: 'error',
+          title: 'Upload Failed',
+          message: result.error || 'Failed to upload file.'
+        });
       }
-    }, 200);
+    } catch (error) {
+      setUploadedFiles(prev => 
+        prev.map(f => 
+          f.id === fileId 
+            ? { ...f, status: 'error' }
+            : f
+        )
+      );
+      addNotification({
+        type: 'error',
+        title: 'Upload Failed',
+        message: 'An unexpected error occurred during upload.'
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const removeFile = (fileId: string) => {

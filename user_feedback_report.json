@@ -1,0 +1,250 @@
+{
+  "report_metadata": {
+    "generated_at": "2025-08-30T19:29:25.303065",
+    "report_type": "User Feedback & Performance Analysis",
+    "version": "1.0"
+  },
+  "feedback_analysis": {
+    "overall_stats": {
+      "total_feedback_entries": 11,
+      "average_rating_overall": 3.6363636363636362,
+      "average_session_duration": 19.081818181818182
+    },
+    "ratings_by_category": {
+      "ux_flow": 2.6666666666666665,
+      "suggestion_quality": 4.25,
+      "ui_smoothness": 3.5,
+      "performance": 4.0
+    },
+    "common_issues": [
+      {
+        "area": "onboarding",
+        "issue": "Confusing at first. Not sure what to do after uploading clothes. Need better onboarding or tutorial.",
+        "rating": 2
+      },
+      {
+        "area": "accessibility",
+        "issue": "Needs better keyboard navigation and screen reader support. Color contrast could be improved in some areas.",
+        "rating": 2
+      }
+    ],
+    "positive_feedback": [
+      {
+        "area": "upload_process",
+        "feedback": "Overall smooth experience. Upload process is intuitive, but could use progress indicators. Match suggestions are surprisingly accurate!",
+        "rating": 4
+      },
+      {
+        "area": "match_suggestions",
+        "feedback": "AI suggestions are spot-on! Love how it considers occasion and weather. The style matching is impressive.",
+        "rating": 5
+      },
+      {
+        "area": "wardrobe_view",
+        "feedback": "Interface is clean and modern. Drag-and-drop upload works well. Could use better visual feedback during processing.",
+        "rating": 4
+      },
+      {
+        "area": "overall_performance",
+        "feedback": "Excellent performance! Fast recommendations, smooth interactions. Bulk upload would be nice for large wardrobes.",
+        "rating": 5
+      },
+      {
+        "area": "match_suggestions",
+        "feedback": "AI learns my preferences well. Suggestions improve over time. Would like more customization options for style preferences.",
+        "rating": 4
+      },
+      {
+        "area": "match_suggestions",
+        "feedback": "Love the AI's understanding of color coordination and seasonal appropriateness. Suggestions feel personalized and stylish.",
+        "rating": 5
+      }
+    ],
+    "device_performance": {
+      "MacBook Pro M2": 4.5,
+      "iPhone 15 Pro": 3.5,
+      "Windows Laptop": 2.5,
+      "Desktop PC": 4.5,
+      "Samsung Galaxy S23": 3.0,
+      "MacBook Air": 2.0,
+      "iPad Pro": 5.0
+    },
+    "recommendations": [
+      "Implement interactive tutorial or guided onboarding flow",
+      "Improve accessibility with better keyboard navigation and screen reader support",
+      "Add progress indicators and better feedback during upload process",
+      "Enhance AI model training with more diverse style preferences and user feedback"
+    ]
+  },
+  "performance_analysis": {
+    "average_metrics": {
+      "page_load_time": 2.1399999999999997,
+      "interaction_response_time": 0.33599999999999997,
+      "upload_completion_time": 5.22,
+      "recommendation_generation_time": 1.34,
+      "ui_responsiveness_score": 4.0
+    },
+    "performance_issues": [],
+    "performance_grade": "D"
+  },
+  "raw_feedback_data": [
+    {
+      "timestamp": "2025-08-30T19:29:25.302995",
+      "user_id": "user_tech_savvy_001",
+      "feedback_type": "ux_flow",
+      "rating": 4,
+      "comments": "Overall smooth experience. Upload process is intuitive, but could use progress indicators. Match suggestions are surprisingly accurate!",
+      "specific_area": "upload_process",
+      "session_duration": 12.5,
+      "device_info": "MacBook Pro M2",
+      "browser_info": "Chrome 120"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303006",
+      "user_id": "user_tech_savvy_001",
+      "feedback_type": "suggestion_quality",
+      "rating": 5,
+      "comments": "AI suggestions are spot-on! Love how it considers occasion and weather. The style matching is impressive.",
+      "specific_area": "match_suggestions",
+      "session_duration": 8.2,
+      "device_info": "MacBook Pro M2",
+      "browser_info": "Chrome 120"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303009",
+      "user_id": "user_fashion_enthusiast_002",
+      "feedback_type": "suggestion_quality",
+      "rating": 3,
+      "comments": "Good start but needs more style variety. Sometimes suggests too conservative combinations. Would love more trendy options.",
+      "specific_area": "match_suggestions",
+      "session_duration": 15.7,
+      "device_info": "iPhone 15 Pro",
+      "browser_info": "Safari Mobile"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303011",
+      "user_id": "user_fashion_enthusiast_002",
+      "feedback_type": "ui_smoothness",
+      "rating": 4,
+      "comments": "Interface is clean and modern. Drag-and-drop upload works well. Could use better visual feedback during processing.",
+      "specific_area": "wardrobe_view",
+      "session_duration": 22.1,
+      "device_info": "iPhone 15 Pro",
+      "browser_info": "Safari Mobile"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303012",
+      "user_id": "user_casual_003",
+      "feedback_type": "ux_flow",
+      "rating": 2,
+      "comments": "Confusing at first. Not sure what to do after uploading clothes. Need better onboarding or tutorial.",
+      "specific_area": "onboarding",
+      "session_duration": 5.3,
+      "device_info": "Windows Laptop",
+      "browser_info": "Edge 119"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303014",
+      "user_id": "user_casual_003",
+      "feedback_type": "performance",
+      "rating": 3,
+      "comments": "App feels responsive but upload takes a while. Not sure if it's working sometimes.",
+      "specific_area": "upload_process",
+      "session_duration": 18.9,
+      "device_info": "Windows Laptop",
+      "browser_info": "Edge 119"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303016",
+      "user_id": "user_power_004",
+      "feedback_type": "performance",
+      "rating": 5,
+      "comments": "Excellent performance! Fast recommendations, smooth interactions. Bulk upload would be nice for large wardrobes.",
+      "specific_area": "overall_performance",
+      "session_duration": 45.2,
+      "device_info": "Desktop PC",
+      "browser_info": "Firefox 121"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303017",
+      "user_id": "user_power_004",
+      "feedback_type": "suggestion_quality",
+      "rating": 4,
+      "comments": "AI learns my preferences well. Suggestions improve over time. Would like more customization options for style preferences.",
+      "specific_area": "match_suggestions",
+      "session_duration": 31.8,
+      "device_info": "Desktop PC",
+      "browser_info": "Firefox 121"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303019",
+      "user_id": "user_mobile_005",
+      "feedback_type": "ui_smoothness",
+      "rating": 3,
+      "comments": "Mobile experience needs work. Buttons are small, scrolling feels laggy. Upload from camera works well though.",
+      "specific_area": "mobile_interface",
+      "session_duration": 9.7,
+      "device_info": "Samsung Galaxy S23",
+      "browser_info": "Chrome Mobile"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303020",
+      "user_id": "user_accessibility_006",
+      "feedback_type": "ux_flow",
+      "rating": 2,
+      "comments": "Needs better keyboard navigation and screen reader support. Color contrast could be improved in some areas.",
+      "specific_area": "accessibility",
+      "session_duration": 12.1,
+      "device_info": "MacBook Air",
+      "browser_info": "Safari 17"
+    },
+    {
+      "timestamp": "2025-08-30T19:29:25.303022",
+      "user_id": "user_style_conscious_007",
+      "feedback_type": "suggestion_quality",
+      "rating": 5,
+      "comments": "Love the AI's understanding of color coordination and seasonal appropriateness. Suggestions feel personalized and stylish.",
+      "specific_area": "match_suggestions",
+      "session_duration": 28.4,
+      "device_info": "iPad Pro",
+      "browser_info": "Safari Mobile"
+    }
+  ],
+  "raw_performance_data": [
+    {
+      "page_load_time": 1.2,
+      "interaction_response_time": 0.15,
+      "upload_completion_time": 2.8,
+      "recommendation_generation_time": 0.9,
+      "ui_responsiveness_score": 5
+    },
+    {
+      "page_load_time": 2.1,
+      "interaction_response_time": 0.35,
+      "upload_completion_time": 5.2,
+      "recommendation_generation_time": 1.4,
+      "ui_responsiveness_score": 4
+    },
+    {
+      "page_load_time": 4.8,
+      "interaction_response_time": 0.85,
+      "upload_completion_time": 12.1,
+      "recommendation_generation_time": 2.7,
+      "ui_responsiveness_score": 2
+    },
+    {
+      "page_load_time": 1.8,
+      "interaction_response_time": 0.25,
+      "upload_completion_time": 4.1,
+      "recommendation_generation_time": 1.1,
+      "ui_responsiveness_score": 4
+    },
+    {
+      "page_load_time": 0.8,
+      "interaction_response_time": 0.08,
+      "upload_completion_time": 1.9,
+      "recommendation_generation_time": 0.6,
+      "ui_responsiveness_score": 5
+    }
+  ]
+}
