@@ -114,10 +114,10 @@ class UltimateAIService:
     
     async def generate_ultimate_recommendations(self, 
                                               query_image_path: str,
-                                              user_preferences: Dict[str, Any] = None,
-                                              occasion: str = None,
-                                              season: str = None,
-                                              style_preference: str = None,
+                                              user_preferences: Optional[Dict[str, Any]] = None,
+                                              occasion: Optional[str] = None,
+                                              season: Optional[str] = None,
+                                              style_preference: Optional[str] = None,
                                               top_k: int = 10) -> Dict[str, Any]:
         """
         Generate comprehensive fashion recommendations using all AI models
@@ -290,10 +290,10 @@ class UltimateAIService:
     
     async def _ultimate_fusion_reranking(self, candidates: List[Dict[str, Any]], 
                                         query_analysis: Dict[str, Any],
-                                        user_preferences: Dict[str, Any] = None,
-                                        occasion: str = None,
-                                        season: str = None,
-                                        style_preference: str = None) -> List[Dict[str, Any]]:
+                                        user_preferences: Optional[Dict[str, Any]] = None,
+                                        occasion: Optional[str] = None,
+                                        season: Optional[str] = None,
+                                        style_preference: Optional[str] = None) -> List[Dict[str, Any]]:
         """Advanced fusion reranking using all models"""
         try:
             # Group candidates by item_id to avoid duplicates
@@ -437,9 +437,9 @@ class UltimateAIService:
     
     async def _generate_comprehensive_advice(self, query_analysis: Dict[str, Any],
                                            recommendations: List[Dict[str, Any]],
-                                           occasion: str = None,
-                                           season: str = None,
-                                           style_preference: str = None) -> Dict[str, Any]:
+                                           occasion: Optional[str] = None,
+                                           season: Optional[str] = None,
+                                           style_preference: Optional[str] = None) -> Dict[str, Any]:
         """Generate comprehensive AI advice"""
         advice = {
             'title': 'AI Fashion Recommendations',
