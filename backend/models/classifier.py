@@ -125,10 +125,15 @@ class GarmentClassifier:
         # 生成分类解释
         explanation = self._explain_classification(features, category)
         
+        # 获取主要颜色
+        primary_color = colors[0]['name'] if colors else 'unknown'
+        
         # 生成风格关键词
         result = {
             "category": category,
+            "garment_type": category,  # 添加 garment_type 字段
             "category_cn": self.category_cn.get(category, category),
+            "primary_color": primary_color,  # 添加 primary_color 字段
             "confidence": features.get("confidence", 0.8),
             "colors": colors,
             "dominant_colors": colors,
@@ -205,17 +210,22 @@ class GarmentClassifier:
         
         # 优化后的分类规则 - 按特异性排序，最具体的规则优先
         
-        # 1. 连衣裙识别 - 长条形
-        if aspect_ratio > 1.2 and edge_density < 0.15:
+        # 1. 外套识别 - 优先处理，避免与连衣裙混淆
+        # 长外套/风衣：长条形 + 高边缘密度
+        if aspect_ratio > 1.2 and edge_density >= 0.12:
+            return "jacket"
+        
+        # 短外套：正方形或稍长 + 高边缘密度
+        elif aspect_ratio <= 1.2 and edge_density >= 0.13:
+            return "jacket"
+        
+        # 2. 连衣裙识别 - 长条形但边缘密度较低（布料较柔软）
+        elif aspect_ratio > 1.3 and edge_density < 0.12:
             return "dress"
         
-        # 2. 裤子识别 - 长条形，边缘密度较高
+        # 3. 裤子识别 - 长条形，边缘密度适中到高
         elif aspect_ratio > 1.1 and edge_density >= 0.15:
             return "pants"
-        
-        # 3. 毛衣识别 - 移除sweater规则，让这些图像默认为shirt避免冲突
-        # elif aspect_ratio == 1.0 and edge_density < 0.105 and color_variance < 15:
-        #     return "sweater"
         
         # 4. 短裤识别 - 正方形，颜色方差适中，但要避免与shirt冲突
         elif aspect_ratio == 1.0 and 15 <= color_variance < 18 and edge_density > 0.08:
@@ -229,15 +239,7 @@ class GarmentClassifier:
         elif 0.8 <= aspect_ratio < 1.0 and edge_density >= 0.1:
             return "skirt"
         
-        # 7. 外套识别 - 边缘密度高
-        elif aspect_ratio <= 1.1 and edge_density >= 0.12:
-            return "jacket"
-        
-        # 8. 上衣识别 - 移除blouse规则，让这些图像默认为shirt
-        # elif 0.9 <= aspect_ratio <= 1.1 and edge_density < 0.12:
-        #     return "blouse"
-        
-        # 9. 默认为衬衫
+        # 7. 默认为衬衫
         else:
             return "shirt"
     
@@ -288,123 +290,179 @@ class GarmentClassifier:
         
         return colors
     
-    def _get_color_name(self, rgb: Tuple[int, int, int], garment_type: str = "") -> str:
-        """
-        根据RGB值获取颜色名称 - 增强版本支持HSV和上下文感知
-        
-        Args:
-            rgb: RGB颜色值
-            garment_type: 服装类型，用于上下文感知分类
-            
-        Returns:
-            颜色名称
-        """
+    def _rgb_to_lab(self, rgb):
+        """Convert RGB to Lab color space for better perceptual accuracy"""
+        import cv2
+        import numpy as np
+        r, g, b = rgb
+        rgb_array = np.array([[[r, g, b]]], dtype=np.uint8)
+        lab = cv2.cvtColor(rgb_array, cv2.COLOR_RGB2LAB)[0][0]
+        return lab.astype(float)
+    
+    def _rgb_to_hsv_precise(self, rgb):
+        """Convert RGB to HSV with precise calculation"""
+        import cv2
+        import numpy as np
+        r, g, b = rgb
+        rgb_array = np.array([[[r, g, b]]], dtype=np.uint8)
+        hsv = cv2.cvtColor(rgb_array, cv2.COLOR_RGB2HSV)[0][0]
+        return hsv.astype(float)
+    
+    def _calculate_delta_e(self, lab1, lab2):
+        """Calculate Delta E (CIE76) color difference"""
+        import numpy as np
+        return np.sqrt(np.sum((lab1 - lab2) ** 2))
+    
+    def _get_color_features(self, rgb):
+        """Extract comprehensive color features from RGB"""
+        import numpy as np
         r, g, b = rgb
         
-        # Convert RGB to HSV for better color distinction
-        h, s, v = colorsys.rgb_to_hsv(r/255.0, g/255.0, b/255.0)
-        h = h * 360  # Convert to degrees
-        s = s * 100  # Convert to percentage
-        v = v * 100  # Convert to percentage
+        # Lab features
+        lab = self._rgb_to_lab(rgb)
+        L, a, b_lab = lab
         
-        # 1. 黑白灰色系（优先级最高）
-        if r > 220 and g > 220 and b > 220:
-            # Context-aware: coats are rarely pure white
-            if garment_type in ['jacket', 'coat'] and r < 240:
-                return "cream"
+        # HSV features
+        hsv = self._rgb_to_hsv_precise(rgb)
+        h, s, v = hsv
+        
+        # Combined feature vector
+        return np.array([L, a, b_lab, h, s, v, r, g, b])
+    
+    def _get_color_name(self, rgb: Tuple[int, int, int], garment_type: str = "") -> str:
+        """Advanced color recognition using Lab+HSV color spaces and Delta E"""
+        import numpy as np
+        
+        r, g, b = rgb
+        
+        # Get comprehensive color features
+        features = self._get_color_features(rgb)
+        L, a, b_lab, h, s, v = features[:6]
+        
+        # Define reference colors using actual OpenCV Lab values
+        # OpenCV Lab: L(0-255), a(0-255), b(0-255) where 128 is neutral
+        reference_colors = {
+             'white': {'lab': [255, 128, 128], 'rgb': [255, 255, 255]},
+             'black': {'lab': [0, 128, 128], 'rgb': [0, 0, 0]},
+             'gray': {'lab': [128, 128, 128], 'rgb': [128, 128, 128]},
+             'beige': {'lab': [169, 137, 158], 'rgb': [194, 154, 108]},
+             'khaki': {'lab': [186, 130, 146], 'rgb': [195, 176, 145]},
+             'cream': {'lab': [251, 121, 150], 'rgb': [255, 253, 208]},
+             'brown': {'lab': [97, 142, 155], 'rgb': [101, 67, 33]},
+             'red': {'lab': [136, 208, 172], 'rgb': [255, 0, 0]},
+             'blue': {'lab': [82, 169, 42], 'rgb': [0, 0, 255]},
+             'green': {'lab': [222, 42, 214], 'rgb': [0, 255, 0]},
+             'yellow': {'lab': [247, 107, 222], 'rgb': [255, 255, 0]},
+             'orange': {'lab': [191, 152, 206], 'rgb': [255, 165, 0]},
+             'purple': {'lab': [76, 187, 92], 'rgb': [128, 0, 128]},
+             'pink': {'lab': [213, 152, 133], 'rgb': [255, 192, 203]}
+         }
+        
+        current_lab = np.array([L, a, b_lab])
+        
+        # 1. 优先处理黑白灰（基于亮度和色度）
+        if L > 90 and abs(a) < 5 and abs(b_lab) < 10:
             return "white"
-        elif r < 40 and g < 40 and b < 40:
+        elif L < 20:
             return "black"
-        elif abs(r - g) < 25 and abs(g - b) < 25 and abs(r - b) < 25:
-            if r > 180:
-                return "white"
-            elif r > 120:
-                return "gray"
-            else:
-                return "black"
-        
-        # 2. 新增：专门的土色调检测（tan/khaki/beige系列）
-        # Tan colors: RGB ranges for various tan shades
-        if (150 <= r <= 220 and 120 <= g <= 180 and 80 <= b <= 140):
-            if r > g + 20 and g > b + 10:  # More red than green, green more than blue
-                return "tan"
-        
-        # Khaki colors: olive-brown earth tones
-        if (140 <= r <= 200 and 130 <= g <= 180 and 90 <= b <= 130):
-            if abs(r - g) < 30 and g > b + 20:  # Similar red/green, less blue
-                return "khaki"
-        
-        # Sand/Desert colors
-        if (180 <= r <= 230 and 160 <= g <= 200 and 120 <= b <= 160):
-            if r > g > b and (r - b) > 40:  # Gradual decrease from red to blue
-                return "sand"
-        
-        # Camel colors
-        if (160 <= r <= 210 and 130 <= g <= 170 and 90 <= b <= 130):
-            if r > g + 15 and g > b + 15:  # Clear red > green > blue pattern
-                return "camel"
-        
-        # 3. HSV-based earth tone detection
-        if 20 <= h <= 60 and 20 <= s <= 70 and 40 <= v <= 80:
-            # Earth tones in HSV space (yellow-orange hues with moderate saturation)
-            if 20 <= h <= 40:  # More towards brown/tan
-                return "tan"
-            elif 40 <= h <= 60:  # More towards olive/khaki
-                return "khaki"
-        
-        # 4. 主要颜色识别
-        max_val = max(r, g, b)
-        min_val = min(r, g, b)
-        
-        # 红色系
-        if r == max_val and r > g + 30 and r > b + 30:
-            if r > 180 and g < 80 and b < 80:
-                return "red"
-            elif r > 150 and g > 80 and b < 80:
-                return "orange"
-            elif r > 120 and g > 60 and b > 60:
-                return "pink"
-            else:
-                return "brown"
-        
-        # 绿色系
-        elif g == max_val and g > r + 30 and g > b + 30:
-            return "green"
-        
-        # 蓝色系
-        elif b == max_val and b > r + 30 and b > g + 30:
-            if b > 150 and r < 100 and g < 100:
-                return "blue"
-            elif b > 120 and r > 80 and g < 120:
-                return "purple"
-            else:
-                return "blue"
-        
-        # 黄色系
-        elif r > 150 and g > 150 and b < 100:
-            return "yellow"
-        
-        # 紫色系
-        elif r > 120 and b > 120 and g < 100:
-            return "purple"
-        
-        # 橙色系
-        elif r > 180 and g > 100 and g < 150 and b < 100:
-            return "orange"
-        
-        # 改进的棕色/米色系检测
-        elif r > 100 and g > 80 and b > 60 and max_val - min_val < 80:
-            # Use HSV to better distinguish beige variations
-            if 30 <= h <= 60 and s < 40 and v > 60:  # Low saturation earth tones
-                return "beige"
-            elif r > 150:
-                return "cream"
-            else:
-                return "brown"
-        
-        # 默认为灰色
-        else:
+        elif L > 30 and L < 70 and abs(a) < 10 and abs(b_lab) < 10:
             return "gray"
+        
+        # 2. 使用Delta E进行精确颜色匹配
+        min_delta_e = float('inf')
+        best_color = 'gray'
+        
+        # 特别处理pink检测，防止与beige混淆
+        pink_lab = np.array(reference_colors['pink']['lab'])
+        pink_delta_e = self._calculate_delta_e(current_lab, pink_lab)
+        
+        # Pink detection: 粉色通常有较高的红色分量和特定的色调
+        if (h <= 15 or h >= 330) and s >= 20 and v >= 150:  # 红色调范围
+            if pink_delta_e < 25:  # 接近粉色的Lab值
+                return "pink"
+        
+        # 特别处理beige和khaki的区分
+        beige_lab = np.array(reference_colors['beige']['lab'])
+        khaki_lab = np.array(reference_colors['khaki']['lab'])
+        
+        beige_delta_e = self._calculate_delta_e(current_lab, beige_lab)
+        khaki_delta_e = self._calculate_delta_e(current_lab, khaki_lab)
+        
+        # 如果在beige/khaki的范围内，使用更精确的判断
+        if beige_delta_e < 30 or khaki_delta_e < 30:
+            # 更精确的beige/khaki区分逻辑
+            
+            # 1. 首先检查是否为beige系列（包括浅beige）
+            if h <= 40 and s >= 10:  # 橙黄色调范围，有一定饱和度
+                if v >= 150:  # 较亮的颜色
+                    # 浅beige: 高亮度 + 低饱和度 + 暖色调
+                    if s <= 90 and a >= -5 and b_lab >= 10:
+                        return "beige"
+                elif v >= 100:  # 中等亮度
+                    # 标准beige: 中等亮度 + 暖色调
+                    if a >= -2 and b_lab >= 12:
+                        return "beige"
+            
+            # 2. 检查是否为khaki（偏绿的土色）
+            elif 40 <= h <= 60 and s >= 8:  # 黄绿色调范围
+                if a <= 5 and 8 <= b_lab <= 20:  # Lab空间中偏绿偏黄
+                    return "khaki"
+            
+            # 3. 边界情况：使用Delta E决定
+            if beige_delta_e < khaki_delta_e:
+                return "beige"
+            else:
+                return "khaki"
+        
+        # 3. 对其他颜色使用Delta E匹配
+        for color_name, color_data in reference_colors.items():
+            if color_name in ['beige', 'khaki']:  # 已经处理过
+                continue
+                
+            ref_lab = np.array(color_data['lab'])
+            delta_e = self._calculate_delta_e(current_lab, ref_lab)
+            
+            if delta_e < min_delta_e:
+                min_delta_e = delta_e
+                best_color = color_name
+        
+        # 4. 基于HSV的补充判断（用于Delta E不够准确的情况）
+        if min_delta_e > 30:  # Delta E差异较大时，使用HSV规则
+            if s < 15:  # 低饱和度
+                if v > 80:
+                    return "white"
+                elif v < 30:
+                    return "black"
+                else:
+                    return "gray"
+            
+            # 高饱和度颜色的HSV判断
+            if s > 30:
+                if h < 15 or h > 345:
+                    return "red"
+                elif 15 <= h <= 45:
+                    return "orange"
+                elif 45 <= h <= 75:
+                    return "yellow"
+                elif 75 <= h <= 165:
+                    return "green"
+                elif 165 <= h <= 270:
+                    return "blue"
+                elif 270 <= h <= 345:
+                    return "purple"
+        
+        # 5. 置信度检查
+        if min_delta_e < 15:  # 高置信度
+            return best_color
+        elif min_delta_e < 30:  # 中等置信度
+            return best_color
+        else:  # 低置信度，返回最接近的基础颜色
+            if L > 70:
+                return "white" if s < 20 else best_color
+            elif L < 30:
+                return "black"
+            else:
+                return "gray" if s < 20 else best_color
     
     def _explain_classification(self, features: dict, garment_type: str) -> str:
         """

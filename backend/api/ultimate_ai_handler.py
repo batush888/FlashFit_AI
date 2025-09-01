@@ -47,13 +47,13 @@ class UltimateAIHandler:
                 tmp_path = tmp.name
             
             try:
-                # Generate ultimate recommendations
+                # Generate ultimate recommendations with proper None handling
                 recommendations = await self.ultimate_ai_service.generate_ultimate_recommendations(
                     query_image_path=tmp_path,
                     user_preferences=user_preferences or {},
-                    occasion=occasion,
-                    season=season,
-                    style_preference=style_preference,
+                    occasion=occasion or "casual",
+                    season=season or "spring",
+                    style_preference=style_preference or "trendy",
                     top_k=target_count
                 )
                 
