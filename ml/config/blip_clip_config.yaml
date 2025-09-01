@@ -1,0 +1,188 @@
+# BLIP+CLIP Fusion Model Configuration
+# Enhanced integration with expanded fashion vocabulary and improved text-image alignment
+
+# Model Configuration
+model:
+  blip_model_name: "Salesforce/blip-image-captioning-base"
+  clip_model_name: "openai/clip-vit-base-patch32"
+  fusion_dim: 512
+  dropout_rate: 0.1
+  
+  # Advanced fusion settings
+  attention_heads: 8
+  fusion_layers: 2
+  temperature_init: 0.07
+  
+  # Fashion vocabulary enhancement
+  vocabulary_expansion: true
+  min_vocabulary_coverage: 0.95
+  caption_enhancement: true
+
+# Training Configuration
+training:
+  batch_size: 16
+  epochs: 50
+  learning_rate: 1e-5
+  weight_decay: 1e-6
+  
+  # Advanced training settings
+  warmup_epochs: 5
+  gradient_clip_norm: 1.0
+  accumulation_steps: 1
+  
+  # Learning rate scheduling
+  scheduler_type: "cosine"  # cosine, linear, exponential
+  min_lr_ratio: 0.01
+  
+  # Early stopping
+  early_stopping_patience: 10
+  early_stopping_min_delta: 0.001
+  
+  # Data loading
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+
+# Data Configuration
+data:
+  # Dataset paths
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  
+  # Image preprocessing
+  image_size: 224
+  normalize_mean: [0.485, 0.456, 0.406]
+  normalize_std: [0.229, 0.224, 0.225]
+  
+  # Data augmentation
+  augmentation:
+    horizontal_flip: 0.5
+    rotation_degrees: 10
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    
+  # Text processing
+  max_caption_length: 77
+  caption_enhancement: true
+  vocabulary_expansion: true
+
+# Loss Configuration
+loss:
+  contrastive_weight: 1.0
+  temperature_learnable: true
+  
+  # Loss components
+  use_hard_negatives: true
+  margin: 0.2
+  
+  # Regularization
+  l2_regularization: 1e-6
+
+# Evaluation Configuration
+evaluation:
+  # Retrieval metrics
+  retrieval_k_values: [1, 5, 10]
+  
+  # Evaluation frequency
+  eval_every_n_epochs: 1
+  save_best_model: true
+  
+  # Metrics to track
+  metrics:
+    - "retrieval_accuracy"
+    - "text_to_image_recall"
+    - "image_to_text_recall"
+    - "contrastive_loss"
+    - "vocabulary_coverage"
+
+# Logging Configuration
+logging:
+  log_level: "INFO"
+  log_every_n_steps: 100
+  
+  # Wandb integration (optional)
+  use_wandb: false
+  wandb_project: "flashfit-blip-clip"
+  wandb_entity: null
+  
+  # Tensorboard integration
+  use_tensorboard: true
+  tensorboard_dir: "logs/blip_clip"
+
+# Paths Configuration
+paths:
+  data_dir: "data/fashion_captions"
+  model_save_dir: "models/blip_clip"
+  checkpoint_dir: "checkpoints/blip_clip"
+  log_dir: "logs/blip_clip"
+  
+  # Pre-trained model cache
+  cache_dir: "cache/models"
+  
+  # Results and plots
+  results_dir: "results/blip_clip"
+  plots_dir: "plots/blip_clip"
+
+# Hardware Configuration
+hardware:
+  device: "auto"  # auto, cuda, cpu
+  mixed_precision: true
+  compile_model: false  # PyTorch 2.0 compilation
+  
+  # Multi-GPU settings
+  use_ddp: false
+  find_unused_parameters: false
+
+# Experiment Configuration
+experiment:
+  name: "blip_clip_fusion_enhanced"
+  description: "Enhanced BLIP+CLIP integration with expanded fashion vocabulary"
+  tags:
+    - "blip"
+    - "clip"
+    - "fusion"
+    - "fashion"
+    - "multimodal"
+  
+  # Reproducibility
+  seed: 42
+  deterministic: true
+  
+  # Experiment tracking
+  save_config: true
+  save_model_architecture: true
+  save_training_plots: true
+
+# Advanced Features
+advanced:
+  # Gradient checkpointing for memory efficiency
+  gradient_checkpointing: false
+  
+  # Model pruning and quantization
+  enable_pruning: false
+  enable_quantization: false
+  
+  # Knowledge distillation
+  use_teacher_model: false
+  teacher_model_path: null
+  distillation_alpha: 0.7
+  distillation_temperature: 4.0
+  
+  # Fashion-specific enhancements
+  fashion_specific:
+    use_style_attention: true
+    use_color_features: true
+    use_texture_features: true
+    use_pattern_features: true
+    
+    # Semantic enhancement
+    use_fashion_taxonomy: true
+    taxonomy_weight: 0.1
+    
+    # Multi-scale features
+    use_multiscale_features: true
+    feature_scales: [1, 2, 4]

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>测试衣橱数据加载修复</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .result { margin: 10px 0; padding: 10px; border: 1px solid #ccc; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        pre { background: #f8f9fa; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>衣橱数据加载测试</h1>
+    <button onclick="testWardrobeAPI()">测试衣橱API</button>
+    <div id="results"></div>
+
+    <script>
+        async function testWardrobeAPI() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<p>正在测试...</p>';
+            
+            try {
+                // 检查认证状态
+                const token = localStorage.getItem('auth_token');
+                if (!token) {
+                    resultsDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ 认证失败</h3>
+                            <p>未找到认证令牌，请先登录</p>
+                            <p><a href="/login">点击这里登录</a></p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // 测试衣橱API
+                const response = await fetch('http://localhost:8080/api/wardrobe', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // 检查数据结构
+                    const hasCorrectStructure = 
+                        data.hasOwnProperty('items') && 
+                        data.hasOwnProperty('stats') &&
+                        data.stats.hasOwnProperty('total_items') &&
+                        data.stats.hasOwnProperty('categories') &&
+                        data.stats.hasOwnProperty('colors');
+                    
+                    if (hasCorrectStructure) {
+                        resultsDiv.innerHTML = `
+                            <div class="result success">
+                                <h3>✅ 衣橱数据加载成功</h3>
+                                <p>数据结构正确，包含所需字段</p>
+                                <p>总物品数: ${data.stats.total_items}</p>
+                                <p>分类数: ${Object.keys(data.stats.categories).length}</p>
+                                <p>颜色数: ${Object.keys(data.stats.colors).length}</p>
+                                <details>
+                                    <summary>查看完整响应数据</summary>
+                                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                                </details>
+                            </div>
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `
+                            <div class="result error">
+                                <h3>⚠️ 数据结构不正确</h3>
+                                <p>API响应成功但数据结构不符合预期</p>
+                                <pre>${JSON.stringify(data, null, 2)}</pre>
+                            </div>
+                        `;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `
+                        <div class="result error">
+                            <h3>❌ API调用失败</h3>
+                            <p>状态码: ${response.status}</p>
+                            <p>错误信息: ${data.message || data.detail || '未知错误'}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ 网络错误</h3>
+                        <p>无法连接到服务器</p>
+                        <p>错误详情: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // 页面加载时自动测试
+        window.onload = function() {
+            testWardrobeAPI();
+        };
+    </script>
+</body>
+</html>

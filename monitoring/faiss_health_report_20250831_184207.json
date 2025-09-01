@@ -1,0 +1,133 @@
+{
+  "report_timestamp": "2025-08-31T18:42:07.987902",
+  "system_health": {
+    "overall_score": 20.0,
+    "status": "critical"
+  },
+  "metrics": {
+    "timestamp": "2025-08-31T18:42:07.986153",
+    "indices": {
+      "clip_fashion": {
+        "stats": {
+          "index_name": "clip_fashion",
+          "total_vectors": 0,
+          "dimension": 0,
+          "index_size_bytes": 0,
+          "index_type": "unknown",
+          "is_trained": false,
+          "file_exists": false,
+          "last_modified": null,
+          "search_latency_ms": null,
+          "memory_usage_mb": null
+        },
+        "performance": {
+          "error": "Index not available or empty"
+        },
+        "health_score": 20.0,
+        "health_details": {
+          "file_missing": true,
+          "empty_index": true
+        }
+      },
+      "blip_fashion": {
+        "stats": {
+          "index_name": "blip_fashion",
+          "total_vectors": 0,
+          "dimension": 0,
+          "index_size_bytes": 0,
+          "index_type": "unknown",
+          "is_trained": false,
+          "file_exists": false,
+          "last_modified": null,
+          "search_latency_ms": null,
+          "memory_usage_mb": null
+        },
+        "performance": {
+          "error": "Index not available or empty"
+        },
+        "health_score": 20.0,
+        "health_details": {
+          "file_missing": true,
+          "empty_index": true
+        }
+      },
+      "fashion_specific": {
+        "stats": {
+          "index_name": "fashion_specific",
+          "total_vectors": 0,
+          "dimension": 0,
+          "index_size_bytes": 0,
+          "index_type": "unknown",
+          "is_trained": false,
+          "file_exists": false,
+          "last_modified": null,
+          "search_latency_ms": null,
+          "memory_usage_mb": null
+        },
+        "performance": {
+          "error": "Index not available or empty"
+        },
+        "health_score": 20.0,
+        "health_details": {
+          "file_missing": true,
+          "empty_index": true
+        }
+      },
+      "user_embeddings": {
+        "stats": {
+          "index_name": "user_embeddings",
+          "total_vectors": 0,
+          "dimension": 0,
+          "index_size_bytes": 0,
+          "index_type": "unknown",
+          "is_trained": false,
+          "file_exists": false,
+          "last_modified": null,
+          "search_latency_ms": null,
+          "memory_usage_mb": null
+        },
+        "performance": {
+          "error": "Index not available or empty"
+        },
+        "health_score": 20.0,
+        "health_details": {
+          "file_missing": true,
+          "empty_index": true
+        }
+      }
+    },
+    "summary": {
+      "total_indices": 4,
+      "healthy_indices": 0,
+      "total_vectors": 0,
+      "total_size_mb": 0.0,
+      "average_health_score": 20.0
+    }
+  },
+  "recommendations": [
+    "Critical: clip_fashion health score is 20.0",
+    "Rebuild missing index file for clip_fashion",
+    "Populate empty index clip_fashion with vectors",
+    "Critical: blip_fashion health score is 20.0",
+    "Rebuild missing index file for blip_fashion",
+    "Populate empty index blip_fashion with vectors",
+    "Critical: fashion_specific health score is 20.0",
+    "Rebuild missing index file for fashion_specific",
+    "Populate empty index fashion_specific with vectors",
+    "Critical: user_embeddings health score is 20.0",
+    "Rebuild missing index file for user_embeddings",
+    "Populate empty index user_embeddings with vectors",
+    "Overall FAISS system health is below acceptable levels"
+  ],
+  "monitoring_info": {
+    "faiss_available": true,
+    "prometheus_available": true,
+    "redis_available": true,
+    "monitored_indices": [
+      "clip_fashion",
+      "blip_fashion",
+      "fashion_specific",
+      "user_embeddings"
+    ]
+  }
+}

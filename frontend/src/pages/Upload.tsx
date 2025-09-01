@@ -1,7 +1,8 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { uploadService } from '../api/upload';
 import { useNotificationStore } from '../stores/notificationStore';
+import { api } from '../api/client';
 
 interface UploadedFile {
   id: string;
@@ -18,9 +19,29 @@ const Upload = () => {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
   const { addNotification } = useNotificationStore();
+
+  // Check authentication status on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const authStatus = api.isAuthenticated();
+      setIsAuthenticated(authStatus);
+      
+      if (!authStatus) {
+        addNotification({
+          type: 'error',
+          title: 'Authentication Required',
+          message: 'Please log in to upload images.'
+        });
+        navigate('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate, addNotification]);
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -67,9 +88,22 @@ const Upload = () => {
   };
 
   const uploadFile = async (fileId: string, file: File) => {
+    // Check authentication before upload
+    if (!api.isAuthenticated()) {
+      addNotification({
+        type: 'error',
+        title: 'Authentication Required',
+        message: 'Please log in to upload images.'
+      });
+      navigate('/login');
+      return;
+    }
+
     setIsUploading(true);
     
     try {
+      console.log('Starting upload for file:', file.name, 'Auth token:', api.getAuthToken()?.substring(0, 20) + '...');
+      
       const result = await uploadService.uploadImage(
         file,
         undefined,
@@ -83,6 +117,8 @@ const Upload = () => {
           );
         }
       );
+      
+      console.log('Upload result:', result);
       
       if (result.success) {
         setUploadedFiles(prev => 
@@ -98,6 +134,7 @@ const Upload = () => {
           message: `${file.name} has been uploaded successfully.`
         });
       } else {
+        console.error('Upload failed:', result.error);
         setUploadedFiles(prev => 
           prev.map(f => 
             f.id === fileId 
@@ -105,13 +142,21 @@ const Upload = () => {
               : f
           )
         );
+        
+        let errorMessage = result.error || 'Failed to upload file.';
+        if (errorMessage.includes('401') || errorMessage.includes('Unauthorized')) {
+          errorMessage = 'Authentication expired. Please log in again.';
+          navigate('/login');
+        }
+        
         addNotification({
           type: 'error',
           title: 'Upload Failed',
-          message: result.error || 'Failed to upload file.'
+          message: errorMessage
         });
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Upload error:', error);
       setUploadedFiles(prev => 
         prev.map(f => 
           f.id === fileId 
@@ -119,10 +164,19 @@ const Upload = () => {
             : f
         )
       );
+      
+      let errorMessage = 'An unexpected error occurred during upload.';
+      if (error.message?.includes('401') || error.message?.includes('Unauthorized')) {
+        errorMessage = 'Authentication expired. Please log in again.';
+        navigate('/login');
+      } else if (error.message?.includes('Network Error')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
       addNotification({
         type: 'error',
         title: 'Upload Failed',
-        message: 'An unexpected error occurred during upload.'
+        message: errorMessage
       });
     } finally {
       setIsUploading(false);

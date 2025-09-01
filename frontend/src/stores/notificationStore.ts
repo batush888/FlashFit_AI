@@ -1,3 +1,6 @@
+import { nanoid } from 'nanoid';
+import { useState, useEffect, useCallback } from 'react';
+
 interface Notification {
   id: string;
   type: 'success' | 'error' | 'warning' | 'info';
@@ -25,19 +28,12 @@ interface NotificationActions {
 
 type NotificationStore = NotificationState & NotificationActions;
 
-// 简化的状态管理实现
+// Global notification store for cross-component notifications
 class NotificationStoreImpl {
-  private state: NotificationState = {
-    notifications: [],
-  };
+  private listeners: Array<(notifications: Notification[]) => void> = [];
+  private notifications: Notification[] = [];
 
-  private listeners: Array<() => void> = [];
-
-  private notify() {
-    this.listeners.forEach(listener => listener());
-  }
-
-  subscribe(listener: () => void) {
+  subscribe(listener: (notifications: Notification[]) => void) {
     this.listeners.push(listener);
     return () => {
       const index = this.listeners.indexOf(listener);
@@ -47,72 +43,85 @@ class NotificationStoreImpl {
     };
   }
 
-  getState(): NotificationState {
-    return this.state;
+  getNotifications(): Notification[] {
+    return this.notifications;
   }
 
   addNotification = (notification: Omit<Notification, 'id' | 'createdAt'>) => {
-    const id = Math.random().toString(36).substr(2, 9);
+    const id = nanoid();
     const newNotification: Notification = {
       ...notification,
       id,
       createdAt: Date.now(),
-      duration: notification.duration ?? 5000,
+      duration: notification.duration ?? (notification.persistent ? undefined : 5000),
     };
 
-    this.state = {
-      ...this.state,
-      notifications: [...this.state.notifications, newNotification],
-    };
+    this.notifications = [...this.notifications, newNotification];
+    this.notifyListeners();
 
-    this.notify();
-
-    // 自动移除通知（除非是持久化的）
-    if (!newNotification.persistent && newNotification.duration && newNotification.duration > 0) {
+    // Auto-remove non-persistent notifications
+    if (!newNotification.persistent && newNotification.duration) {
       setTimeout(() => {
-        this.removeNotification(id);
+        this.removeNotification(newNotification.id);
       }, newNotification.duration);
     }
   };
 
   removeNotification = (id: string) => {
-    this.state = {
-      ...this.state,
-      notifications: this.state.notifications.filter(n => n.id !== id),
-    };
-    this.notify();
+    this.notifications = this.notifications.filter(n => n.id !== id);
+    this.notifyListeners();
   };
 
   clearNotifications = () => {
-    this.state = {
-      ...this.state,
-      notifications: [],
-    };
-    this.notify();
+    this.notifications = [];
+    this.notifyListeners();
   };
 
   clearNotificationsByType = (type: Notification['type']) => {
-    this.state = {
-      ...this.state,
-      notifications: this.state.notifications.filter(n => n.type !== type),
-    };
-    this.notify();
+    this.notifications = this.notifications.filter(n => n.type !== type);
+    this.notifyListeners();
   };
+
+  private notifyListeners() {
+    this.listeners.forEach(listener => listener(this.notifications));
+  }
 }
 
 const notificationStoreImpl = new NotificationStoreImpl();
 
-// React Hook
+// React Hook with proper state management
 export const useNotificationStore = (): NotificationStore => {
-  // 简化实现，不使用React hooks
-  const state = notificationStoreImpl.getState();
-  
+  const [notifications, setNotifications] = useState<Notification[]>(
+    notificationStoreImpl.getNotifications()
+  );
+
+  useEffect(() => {
+    const unsubscribe = notificationStoreImpl.subscribe(setNotifications);
+    return unsubscribe;
+  }, []);
+
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'createdAt'>) => {
+    notificationStoreImpl.addNotification(notification);
+  }, []);
+
+  const removeNotification = useCallback((id: string) => {
+    notificationStoreImpl.removeNotification(id);
+  }, []);
+
+  const clearNotifications = useCallback(() => {
+    notificationStoreImpl.clearNotifications();
+  }, []);
+
+  const clearNotificationsByType = useCallback((type: Notification['type']) => {
+    notificationStoreImpl.clearNotificationsByType(type);
+  }, []);
+
   return {
-    ...state,
-    addNotification: notificationStoreImpl.addNotification,
-    removeNotification: notificationStoreImpl.removeNotification,
-    clearNotifications: notificationStoreImpl.clearNotifications,
-    clearNotificationsByType: notificationStoreImpl.clearNotificationsByType,
+    notifications,
+    addNotification,
+    removeNotification,
+    clearNotifications,
+    clearNotificationsByType,
   };
 };
 
@@ -148,7 +157,7 @@ export const createNotification = {
   }),
 };
 
-// 全局通知函数
+// Global notification functions for use outside React components
 export const notify = {
   success: (title: string, message: string, options?: Partial<Notification>) => {
     notificationStoreImpl.addNotification(createNotification.success(title, message, options));
@@ -166,3 +175,6 @@ export const notify = {
     notificationStoreImpl.addNotification(createNotification.info(title, message, options));
   },
 };
+
+// Export the store instance for direct access if needed
+export { notificationStoreImpl };

@@ -1,0 +1,102 @@
+{
+  "report_timestamp": "2025-08-31T18:42:35.693065",
+  "system_health": {
+    "overall_score": 76.66666666666667,
+    "status": "healthy"
+  },
+  "metrics": {
+    "timestamp": "2025-08-31T18:42:35.668240",
+    "indices": {
+      "clip_fashion": {
+        "stats": {
+          "index_name": "clip_fashion",
+          "total_vectors": 16,
+          "dimension": 512,
+          "index_size_bytes": 32813,
+          "index_type": "IndexFlatIP",
+          "is_trained": true,
+          "file_exists": true,
+          "last_modified": "2025-08-30 21:40:48.633516",
+          "search_latency_ms": null,
+          "memory_usage_mb": 1.03125
+        },
+        "performance": {
+          "mean_latency_ms": 0.6338596343994141,
+          "median_latency_ms": 0.0050067901611328125,
+          "p95_latency_ms": 2.5062084197998042,
+          "p99_latency_ms": 3.0012035369873047,
+          "min_latency_ms": 0.003814697265625,
+          "max_latency_ms": 3.1249523162841797,
+          "queries_per_second": 1577.6363499586248
+        },
+        "health_score": 90.0,
+        "health_details": {
+          "low_vector_count": 16
+        }
+      },
+      "blip_fashion": {
+        "stats": {
+          "index_name": "blip_fashion",
+          "total_vectors": 0,
+          "dimension": 768,
+          "index_size_bytes": 45,
+          "index_type": "IndexFlatIP",
+          "is_trained": true,
+          "file_exists": true,
+          "last_modified": "2025-08-30 21:40:48.650634",
+          "search_latency_ms": null,
+          "memory_usage_mb": null
+        },
+        "performance": {
+          "error": "Index not available or empty"
+        },
+        "health_score": 70.0,
+        "health_details": {
+          "empty_index": true
+        }
+      },
+      "fashion_specific": {
+        "stats": {
+          "index_name": "fashion_specific",
+          "total_vectors": 0,
+          "dimension": 512,
+          "index_size_bytes": 45,
+          "index_type": "IndexFlatIP",
+          "is_trained": true,
+          "file_exists": true,
+          "last_modified": "2025-08-30 21:40:48.650799",
+          "search_latency_ms": null,
+          "memory_usage_mb": null
+        },
+        "performance": {
+          "error": "Index not available or empty"
+        },
+        "health_score": 70.0,
+        "health_details": {
+          "empty_index": true
+        }
+      }
+    },
+    "summary": {
+      "total_indices": 3,
+      "healthy_indices": 3,
+      "total_vectors": 16,
+      "total_size_mb": 0.031378746032714844,
+      "average_health_score": 76.66666666666667
+    }
+  },
+  "recommendations": [
+    "Populate empty index blip_fashion with vectors",
+    "Populate empty index fashion_specific with vectors"
+  ],
+  "monitoring_info": {
+    "faiss_available": true,
+    "prometheus_available": true,
+    "redis_available": true,
+    "monitored_indices": [
+      "clip_fashion",
+      "blip_fashion",
+      "fashion_specific"
+    ]
+  }
+}

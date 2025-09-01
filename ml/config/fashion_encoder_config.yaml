@@ -1,0 +1,106 @@
+# Fashion Encoder Fine-tuning Configuration
+
+# Model Configuration
+model:
+  num_categories: 20  # Will be auto-detected from dataset
+  embedding_dim: 512
+  clip_model_name: "openai/clip-vit-base-patch32"
+  freeze_clip_initially: true
+  unfreeze_after_epochs: 10
+  unfreeze_layers: 2
+
+# Training Configuration
+training:
+  batch_size: 32
+  num_epochs: 50
+  learning_rate: 1e-4
+  weight_decay: 1e-5
+  early_stopping_patience: 10
+  gradient_clip_norm: 1.0
+  
+  # Loss weights
+  classification_weight: 1.0
+  compatibility_weight: 0.5
+  
+  # Learning rate scheduling
+  scheduler:
+    type: "ReduceLROnPlateau"
+    mode: "min"
+    factor: 0.5
+    patience: 5
+    min_lr: 1e-7
+
+# Data Configuration
+data:
+  train_split: 0.8
+  val_split: 0.1
+  test_split: 0.1
+  num_workers: 4
+  pin_memory: true
+  
+  # Data augmentation
+  augmentation:
+    horizontal_flip: 0.5
+    rotation_degrees: 10
+    color_jitter:
+      brightness: 0.2
+      contrast: 0.2
+      saturation: 0.2
+      hue: 0.1
+    random_crop: false
+    
+  # Image preprocessing
+  image_size: [224, 224]
+  normalize:
+    mean: [0.485, 0.456, 0.406]
+    std: [0.229, 0.224, 0.225]
+
+# Loss Configuration
+loss:
+  triplet:
+    margin: 0.3
+    mining_strategy: "hard"
+  contrastive:
+    margin: 1.0
+  classification:
+    label_smoothing: 0.1
+
+# Evaluation Configuration
+evaluation:
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+    - "compatibility_score"
+  
+  # Compatibility evaluation
+  compatibility:
+    similarity_threshold: 0.7
+    top_k_retrieval: [1, 5, 10]
+
+# Logging and Saving
+logging:
+  log_interval: 10  # Log every N batches
+  save_interval: 5   # Save checkpoint every N epochs
+  plot_training: true
+  
+# Paths
+paths:
+  data_dir: "data/fashion_dataset"
+  model_save_dir: "models/fashion_encoder"
+  logs_dir: "logs/fashion_encoder"
+  plots_dir: "plots/fashion_encoder"
+
+# Hardware Configuration
+hardware:
+  device: "auto"  # auto, cuda, cpu
+  mixed_precision: true
+  compile_model: false  # PyTorch 2.0 compilation
+
+# Experiment Configuration
+experiment:
+  name: "enhanced_fashion_encoder_v1"
+  description: "Multi-task learning with style attention"
+  tags: ["fashion", "multi-task", "attention", "compatibility"]
+  seed: 42

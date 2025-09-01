@@ -7,6 +7,7 @@ from datetime import datetime
 from typing import Dict, Any
 import uuid
 import shutil
+import numpy as np
 
 # 导入我们的模型
 from models.clip_model import get_clip_model
@@ -109,6 +110,16 @@ class UploadHandler:
             # 获取模型实例
             clip_model = get_clip_model()
             classifier = get_classifier()
+            
+            # 预处理图像 - 移除白色背景以改善分类
+            img_array = np.array(image)
+            # 创建掩码来识别白色/浅色背景
+            white_mask = np.all(img_array > 240, axis=2)
+            if np.sum(white_mask) > img_array.shape[0] * img_array.shape[1] * 0.3:
+                # 如果超过30%是白色背景，则进行背景处理
+                # 将白色背景替换为中性灰色
+                img_array[white_mask] = [128, 128, 128]
+                image = Image.fromarray(img_array)
             
             # 服装分类
             classification_result = classifier.classify_garment(image)

@@ -24,6 +24,7 @@ private_keys/
 *.sqlite3
 dump.rdb (Redis dump)
 redis.log
+data/datasets
 #Logs and Temporary Files:
 
 logs/
@@ -59,3 +60,4 @@ Thumbs.db
 
 docker-compose.override.yml
 .dockerignore (if containing sensitive paths)
+node_modules

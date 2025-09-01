@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload with Authentication</title>
+</head>
+<body>
+    <h1>Test Upload Functionality</h1>
+    <button onclick="setAuthToken()">Set Auth Token</button>
+    <button onclick="clearAuthToken()">Clear Auth Token</button>
+    <button onclick="checkAuthStatus()">Check Auth Status</button>
+    <br><br>
+    <input type="file" id="fileInput" accept="image/*">
+    <button onclick="uploadFile()">Upload File</button>
+    <br><br>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8080';
+        const AUTH_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzVfMTc1NjcxNTkwNiIsImV4cCI6MTc1NzMyMTA1MX0.ItVoYTcueCktp0pIZRk_rbLr7Tsdbr7y6ZdaO0gvGaE';
+
+        function setAuthToken() {
+            localStorage.setItem('auth_token', AUTH_TOKEN);
+            document.getElementById('result').innerHTML = '<p style="color: green;">Auth token set in localStorage</p>';
+        }
+
+        function clearAuthToken() {
+            localStorage.removeItem('auth_token');
+            document.getElementById('result').innerHTML = '<p style="color: red;">Auth token cleared from localStorage</p>';
+        }
+
+        function checkAuthStatus() {
+            const token = localStorage.getItem('auth_token');
+            const status = token ? 'Authenticated' : 'Not authenticated';
+            document.getElementById('result').innerHTML = `<p>Status: ${status}</p><p>Token: ${token ? token.substring(0, 50) + '...' : 'None'}</p>`;
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Please select a file</p>';
+                return;
+            }
+
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                document.getElementById('result').innerHTML = '<p style="color: red;">Please set auth token first</p>';
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_BASE}/api/upload`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    document.getElementById('result').innerHTML = `
+                        <p style="color: green;">Upload successful!</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                } else {
+                    document.getElementById('result').innerHTML = `
+                        <p style="color: red;">Upload failed: ${response.status}</p>
+                        <pre>${JSON.stringify(result, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('result').innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+
+        // Check initial auth status
+        window.onload = function() {
+            checkAuthStatus();
+        };
+    </script>
+</body>
+</html>

@@ -47,6 +47,96 @@ groups:
           summary: "High system load detected"
           description: "15-minute load average is above 2.0 on {{ $labels.instance }}"
 
+  - name: faiss_health_alerts
+    rules:
+      # FAISS index health score below critical threshold
+      - alert: FAISSIndexCriticalHealth
+        expr: faiss_health_score < 50
+        for: 2m
+        labels:
+          severity: critical
+          service: faiss
+        annotations:
+          summary: "FAISS index {{ $labels.index_name }} has critical health issues"
+          description: "Health score is {{ $value }}/100 for index {{ $labels.index_name }}"
+
+      # FAISS index health score below warning threshold
+      - alert: FAISSIndexLowHealth
+        expr: faiss_health_score < 70
+        for: 5m
+        labels:
+          severity: warning
+          service: faiss
+        annotations:
+          summary: "FAISS index {{ $labels.index_name }} has degraded health"
+          description: "Health score is {{ $value }}/100 for index {{ $labels.index_name }}"
+
+      # High FAISS search latency
+      - alert: FAISSHighSearchLatency
+        expr: histogram_quantile(0.95, rate(faiss_search_duration_seconds_bucket[5m])) > 1.0
+        for: 3m
+        labels:
+          severity: warning
+          service: faiss
+        annotations:
+          summary: "High FAISS search latency detected"
+          description: "95th percentile search latency is {{ $value }}s for index {{ $labels.index_name }}"
+
+      # FAISS index empty or missing vectors
+      - alert: FAISSIndexEmpty
+        expr: faiss_vector_count_total == 0
+        for: 1m
+        labels:
+          severity: critical
+          service: faiss
+        annotations:
+          summary: "FAISS index {{ $labels.index_name }} is empty"
+          description: "Index {{ $labels.index_name }} contains no vectors"
+
+      # High FAISS error rate
+      - alert: FAISSHighErrorRate
+        expr: rate(faiss_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          service: faiss
+        annotations:
+          summary: "High FAISS error rate detected"
+          description: "Error rate is {{ $value }} errors/second for index {{ $labels.index_name }}"
+
+      # FAISS index file too old (stale)
+      - alert: FAISSIndexStale
+        expr: faiss_index_age_hours > 48
+        for: 10m
+        labels:
+          severity: warning
+          service: faiss
+        annotations:
+          summary: "FAISS index {{ $labels.index_name }} is stale"
+          description: "Index {{ $labels.index_name }} is {{ $value }} hours old"
+
+      # High FAISS memory usage
+      - alert: FAISSHighMemoryUsage
+        expr: faiss_memory_usage_mb > 1024
+        for: 5m
+        labels:
+          severity: warning
+          service: faiss
+        annotations:
+          summary: "High FAISS memory usage"
+          description: "Index {{ $labels.index_name }} is using {{ $value }}MB of memory"
+
+      # FAISS index size growing too fast
+      - alert: FAISSIndexGrowthRate
+        expr: rate(faiss_index_size_bytes[1h]) > 100000000  # 100MB/hour
+        for: 30m
+        labels:
+          severity: info
+          service: faiss
+        annotations:
+          summary: "FAISS index {{ $labels.index_name }} growing rapidly"
+          description: "Index size is growing at {{ $value }} bytes/second"
+
   - name: flashfit_api_alerts
     rules:
       # API service down

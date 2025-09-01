@@ -77,12 +77,13 @@ class WardrobeHandler:
         
         return {
             "items": sorted_items,
-            "total_count": total_items,
-            "statistics": {
-                "category_distribution": category_counts,
-                "color_distribution": color_counts,
-                "favorite_count": sum(1 for item in user_wardrobe if item.get("is_favorite", False))
+            "stats": {
+                "total_items": total_items,
+                "categories": category_counts,
+                "colors": color_counts,
+                "recent_uploads": len([item for item in user_wardrobe if (datetime.now() - datetime.fromisoformat(item.get("upload_time", "2024-01-01T00:00:00").replace('Z', '+00:00'))).days <= 7])
             },
+            "total_count": total_items,
             "last_updated": datetime.now().isoformat()
         }
     

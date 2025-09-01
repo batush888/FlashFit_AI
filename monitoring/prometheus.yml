@@ -42,16 +42,46 @@ scrape_configs:
         target_label: instance
         replacement: 'flashfit-frontend'
 
-  # FlashFit AI Custom Monitoring Service
-  - job_name: 'flashfit-monitor'
+  # FlashFit AI Custom Monitoring Service (Modular)
+  - job_name: 'flashfit-monitor-modular'
     static_configs:
-      - targets: ['flashfit-monitor:9090']
+      - targets: ['host.docker.internal:9092']
     metrics_path: '/metrics'
     scrape_interval: 10s
     relabel_configs:
       - source_labels: [__address__]
         target_label: instance
-        replacement: 'flashfit-monitor'
+        replacement: 'flashfit-monitor-modular'
+
+  # FlashFit AI FAISS Monitor
+  - job_name: 'flashfit-faiss-monitor'
+    static_configs:
+      - targets: ['host.docker.internal:9091']
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'flashfit-faiss-monitor'
+
+  # FAISS Index Health Monitoring
+  - job_name: 'faiss-monitor'
+    static_configs:
+      - targets: ['localhost:9091']
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    params:
+      format: ['prometheus']
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'faiss-monitor'
+    metric_relabel_configs:
+      - source_labels: [__name__]
+        regex: 'faiss_.*'
+        target_label: service
+        replacement: 'flashfit-faiss'
 
   # System metrics via Node Exporter
   - job_name: 'node-exporter'

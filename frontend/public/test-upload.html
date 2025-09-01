@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Test</title>
+</head>
+<body>
+    <h1>Upload Test Debug</h1>
+    <div id="auth-status"></div>
+    <div id="test-results"></div>
+    
+    <script>
+        // Check authentication status
+        const authToken = localStorage.getItem('auth_token');
+        const authStatus = document.getElementById('auth-status');
+        
+        if (authToken) {
+            authStatus.innerHTML = `<p style="color: green;">✓ Authenticated - Token exists: ${authToken.substring(0, 20)}...</p>`;
+        } else {
+            authStatus.innerHTML = `<p style="color: red;">✗ Not authenticated - No token found in localStorage</p>`;
+        }
+        
+        // Test upload endpoint
+        async function testUpload() {
+            const results = document.getElementById('test-results');
+            results.innerHTML = '<p>Testing upload endpoint...</p>';
+            
+            try {
+                const formData = new FormData();
+                // Create a small test file
+                const blob = new Blob(['test'], { type: 'text/plain' });
+                const file = new File([blob], 'test.txt', { type: 'text/plain' });
+                formData.append('file', file);
+                
+                const response = await fetch('http://localhost:8080/api/upload', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+                
+                const responseText = await response.text();
+                
+                results.innerHTML = `
+                    <h3>Upload Test Results:</h3>
+                    <p><strong>Status:</strong> ${response.status} ${response.statusText}</p>
+                    <p><strong>Response:</strong> ${responseText}</p>
+                    <p><strong>Headers:</strong> ${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</p>
+                `;
+            } catch (error) {
+                results.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+            }
+        }
+        
+        if (authToken) {
+            testUpload();
+        } else {
+            document.getElementById('test-results').innerHTML = '<p>Please log in first to test upload functionality.</p>';
+        }
+    </script>
+</body>
+</html>

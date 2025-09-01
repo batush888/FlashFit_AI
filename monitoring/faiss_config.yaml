@@ -1,0 +1,237 @@
+# FAISS Monitoring Configuration
+# Configuration for FAISS index health monitoring and metrics collection
+
+# FAISS Index Configuration
+indices:
+  clip_fashion:
+    path: "data/clip_fashion.index"
+    description: "CLIP model embeddings for fashion items"
+    expected_dimension: 512
+    min_vectors: 1000
+    max_age_hours: 24
+    critical_latency_ms: 1000
+    warning_latency_ms: 500
+    
+  blip_fashion:
+    path: "data/blip_fashion.index"
+    description: "BLIP model embeddings for fashion items"
+    expected_dimension: 768
+    min_vectors: 1000
+    max_age_hours: 24
+    critical_latency_ms: 1000
+    warning_latency_ms: 500
+    
+  fashion_specific:
+    path: "data/fashion_specific.index"
+    description: "Fashion-specific encoder embeddings"
+    expected_dimension: 256
+    min_vectors: 1000
+    max_age_hours: 24
+    critical_latency_ms: 800
+    warning_latency_ms: 400
+
+# Monitoring Configuration
+monitoring:
+  # Metrics collection interval in seconds
+  collection_interval: 60
+  
+  # Performance benchmarking
+  benchmark:
+    enabled: true
+    num_queries: 10
+    k_neighbors: 10
+    interval_minutes: 15
+    
+  # Health scoring thresholds
+  health_thresholds:
+    critical: 50
+    warning: 70
+    healthy: 85
+    
+  # Error tracking
+  error_tracking:
+    max_errors_per_hour: 10
+    reset_interval_hours: 24
+    
+  # Memory monitoring
+  memory:
+    warning_threshold_mb: 512
+    critical_threshold_mb: 1024
+    
+# Prometheus Configuration
+prometheus:
+  enabled: true
+  port: 9091
+  metrics_path: "/metrics"
+  
+  # Custom metric labels
+  labels:
+    service: "flashfit-faiss"
+    environment: "development"
+    version: "2.0"
+    
+  # Metric retention
+  retention:
+    search_latency_samples: 1000
+    error_count_reset_hours: 24
+
+# Redis Configuration
+redis:
+  enabled: true
+  url: "redis://localhost:6379/0"
+  
+  # Cache settings
+  cache:
+    metrics_ttl_seconds: 300  # 5 minutes
+    health_report_ttl_seconds: 900  # 15 minutes
+    
+  # Key prefixes
+  key_prefixes:
+    metrics: "faiss:metrics:"
+    health: "faiss:health:"
+    performance: "faiss:perf:"
+
+# Alerting Configuration
+alerting:
+  enabled: true
+  
+  # Alert channels
+  channels:
+    - type: "log"
+      level: "ERROR"
+      
+    - type: "prometheus"
+      enabled: true
+      
+  # Alert rules
+  rules:
+    index_missing:
+      severity: "critical"
+      message: "FAISS index file is missing: {index_name}"
+      
+    index_empty:
+      severity: "critical"
+      message: "FAISS index is empty: {index_name}"
+      
+    high_latency:
+      severity: "warning"
+      threshold_ms: 1000
+      message: "High search latency detected: {index_name} ({latency_ms}ms)"
+      
+    low_health_score:
+      severity: "warning"
+      threshold: 70
+      message: "Low health score: {index_name} ({health_score}/100)"
+      
+    stale_index:
+      severity: "warning"
+      threshold_hours: 48
+      message: "Stale index detected: {index_name} (age: {age_hours}h)"
+      
+    high_error_rate:
+      severity: "critical"
+      threshold_per_hour: 20
+      message: "High error rate: {index_name} ({error_count} errors/hour)"
+
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging
+  file:
+    enabled: true
+    path: "logs/faiss_monitor.log"
+    max_size_mb: 100
+    backup_count: 5
+    
+  # Console logging
+  console:
+    enabled: true
+    colored: true
+
+# Report Configuration
+reporting:
+  # Automatic report generation
+  auto_generate:
+    enabled: true
+    interval_hours: 6
+    
+  # Report storage
+  storage:
+    directory: "reports/faiss"
+    max_reports: 50
+    compress_old: true
+    
+  # Report format
+  format:
+    include_raw_metrics: false
+    include_performance_history: true
+    include_recommendations: true
+    
+# Integration Configuration
+integration:
+  # Backend API integration
+  backend_api:
+    enabled: true
+    base_url: "http://localhost:8080"
+    health_endpoint: "/health/faiss"
+    
+  # Grafana dashboard
+  grafana:
+    enabled: true
+    dashboard_id: "faiss-monitoring"
+    
+  # External monitoring systems
+  external:
+    datadog:
+      enabled: false
+      api_key: ""
+      
+    newrelic:
+      enabled: false
+      license_key: ""
+
+# Development Configuration
+development:
+  # Mock data for testing
+  mock_data:
+    enabled: false
+    generate_synthetic_indices: false
+    
+  # Debug settings
+  debug:
+    verbose_logging: false
+    save_benchmark_data: false
+    profile_performance: false
+    
+  # Testing
+  testing:
+    skip_file_checks: false
+    use_small_benchmarks: true
+    mock_redis: false
+
+# Production Configuration
+production:
+  # Performance optimizations
+  performance:
+    batch_metrics_updates: true
+    async_benchmarking: true
+    cache_index_stats: true
+    
+  # Security
+  security:
+    require_authentication: false
+    api_key_required: false
+    
+  # Reliability
+  reliability:
+    retry_failed_operations: true
+    max_retries: 3
+    circuit_breaker_enabled: true
+    
+  # Resource limits
+  limits:
+    max_concurrent_benchmarks: 2
+    max_memory_usage_mb: 2048
+    max_cpu_usage_percent: 80

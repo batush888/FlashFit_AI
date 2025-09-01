@@ -1,0 +1,183 @@
+<svg width="1200" height="900" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="frontendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6366F1;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="backendGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10B981;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="aiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#DC2626;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EF4444;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="monitorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C2D12;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#EA580C;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="proxyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7C3AED;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8B5CF6;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="containerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#374151;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6B7280;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="2" stdDeviation="3" flood-color="#00000030"/>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="900" fill="#F8FAFC"/>
+  
+  <!-- Title -->
+  <text x="600" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#1F2937">FlashFit AI Phase 2 - Architecture Diagram</text>
+  
+  <!-- Container Layer (Bottom) -->
+  <rect x="50" y="750" width="1100" height="120" rx="10" fill="url(#containerGrad)" filter="url(#shadow)"/>
+  <text x="70" y="775" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">Containerization Layer (Docker)</text>
+  <text x="70" y="795" font-family="Arial, sans-serif" font-size="12" fill="white">• Backend Container (FastAPI)</text>
+  <text x="70" y="810" font-family="Arial, sans-serif" font-size="12" fill="white">• Frontend Container (Vite/React)</text>
+  <text x="70" y="825" font-family="Arial, sans-serif" font-size="12" fill="white">• Monitoring Container (Python)</text>
+  <text x="70" y="840" font-family="Arial, sans-serif" font-size="12" fill="white">• FAISS Monitor Container</text>
+  <text x="70" y="855" font-family="Arial, sans-serif" font-size="12" fill="white">• Orchestrated via docker-compose.production.yml</text>
+  
+  <!-- Reverse Proxy Layer -->
+  <rect x="50" y="60" width="1100" height="80" rx="10" fill="url(#proxyGrad)" filter="url(#shadow)"/>
+  <text x="70" y="85" font-family="Arial, sans-serif" font-size="16" font-weight="bold" fill="white">Reverse Proxy Layer (Nginx/Traefik)</text>
+  <text x="70" y="105" font-family="Arial, sans-serif" font-size="12" fill="white">Routes: /app → Frontend (3000) | /api → Backend (8080) | /metrics → Monitoring (9092)</text>
+  <text x="70" y="120" font-family="Arial, sans-serif" font-size="12" fill="white">Security: SSL, CORS, gzip, rate limiting</text>
+  
+  <!-- Frontend Layer -->
+  <rect x="70" y="170" width="250" height="120" rx="10" fill="url(#frontendGrad)" filter="url(#shadow)"/>
+  <text x="85" y="195" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">Frontend Layer</text>
+  <text x="85" y="215" font-family="Arial, sans-serif" font-size="12" fill="white">Port: 3000</text>
+  <text x="85" y="230" font-family="Arial, sans-serif" font-size="11" fill="white">• Vite Dev Server</text>
+  <text x="85" y="245" font-family="Arial, sans-serif" font-size="11" fill="white">• React UI Components</text>
+  <text x="85" y="260" font-family="Arial, sans-serif" font-size="11" fill="white">• Route: /app → Main UI</text>
+  <text x="85" y="275" font-family="Arial, sans-serif" font-size="11" fill="white">• Production Build Ready</text>
+  
+  <!-- Backend API Layer -->
+  <rect x="350" y="170" width="280" height="120" rx="10" fill="url(#backendGrad)" filter="url(#shadow)"/>
+  <text x="365" y="195" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">Backend API Layer</text>
+  <text x="365" y="215" font-family="Arial, sans-serif" font-size="12" fill="white">Port: 8080</text>
+  <text x="365" y="230" font-family="Arial, sans-serif" font-size="11" fill="white">• FastAPI Server</text>
+  <text x="365" y="245" font-family="Arial, sans-serif" font-size="11" fill="white">• /api/recommend, /api/feedback</text>
+  <text x="365" y="260" font-family="Arial, sans-serif" font-size="11" fill="white">• /api/faiss, /api/wardrobe</text>
+  <text x="365" y="275" font-family="Arial, sans-serif" font-size="11" fill="white">• Redis + PostgreSQL Integration</text>
+  
+  <!-- AI Model Layer -->
+  <rect x="70" y="320" width="560" height="140" rx="10" fill="url(#aiGrad)" filter="url(#shadow)"/>
+  <text x="85" y="345" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">AI Model Layer</text>
+  <text x="85" y="365" font-family="Arial, sans-serif" font-size="12" fill="white">Tri-Model Ensemble:</text>
+  <text x="85" y="380" font-family="Arial, sans-serif" font-size="11" fill="white">• CLIP Encoder (Image-Text Matching)</text>
+  <text x="85" y="395" font-family="Arial, sans-serif" font-size="11" fill="white">• BLIP Captioner (Image Understanding)</text>
+  <text x="85" y="410" font-family="Arial, sans-serif" font-size="11" fill="white">• Fashion Encoder (Style Classification)</text>
+  <text x="85" y="425" font-family="Arial, sans-serif" font-size="11" fill="white">• Fusion Reranker with Meta-Learning</text>
+  <text x="85" y="440" font-family="Arial, sans-serif" font-size="11" fill="white">• Per-user Embeddings & Feedback Loop</text>
+  
+  <!-- Data Storage -->
+  <rect x="680" y="320" width="200" height="70" rx="10" fill="#1F2937" filter="url(#shadow)"/>
+  <text x="695" y="340" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">Data Storage</text>
+  <text x="695" y="355" font-family="Arial, sans-serif" font-size="11" fill="white">• Redis (Embeddings)</text>
+  <text x="695" y="370" font-family="Arial, sans-serif" font-size="11" fill="white">• PostgreSQL (Persistent)</text>
+  
+  <rect x="680" y="410" width="200" height="50" rx="10" fill="#1F2937" filter="url(#shadow)"/>
+  <text x="695" y="430" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="white">FAISS Indices</text>
+  <text x="695" y="445" font-family="Arial, sans-serif" font-size="11" fill="white">• Vector Search & Similarity</text>
+  
+  <!-- Monitoring Layer -->
+  <rect x="70" y="490" width="280" height="120" rx="10" fill="url(#monitorGrad)" filter="url(#shadow)"/>
+  <text x="85" y="515" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">Monitoring & Metrics</text>
+  <text x="85" y="535" font-family="Arial, sans-serif" font-size="11" fill="white">• Modular Monitor (Port 9092)</text>
+  <text x="85" y="550" font-family="Arial, sans-serif" font-size="11" fill="white">  CPU, Memory, Service Health</text>
+  <text x="85" y="565" font-family="Arial, sans-serif" font-size="11" fill="white">• FAISS Monitor (Port 9091)</text>
+  <text x="85" y="580" font-family="Arial, sans-serif" font-size="11" fill="white">  Index Health, Search Latency</text>
+  <text x="85" y="595" font-family="Arial, sans-serif" font-size="11" fill="white">• Prometheus Metrics Collection</text>
+  
+  <!-- Observability Layer -->
+  <rect x="380" y="490" width="250" height="120" rx="10" fill="#0F172A" filter="url(#shadow)"/>
+  <text x="395" y="515" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="white">Observability Layer</text>
+  <text x="395" y="535" font-family="Arial, sans-serif" font-size="12" fill="white">Port: 9090 (Prometheus)</text>
+  <text x="395" y="550" font-family="Arial, sans-serif" font-size="12" fill="white">Port: 3001 (Grafana)</text>
+  <text x="395" y="570" font-family="Arial, sans-serif" font-size="11" fill="white">• Prometheus scrapes metrics</text>
+  <text x="395" y="585" font-family="Arial, sans-serif" font-size="11" fill="white">• Grafana dashboards</text>
+  <text x="395" y="600" font-family="Arial, sans-serif" font-size="11" fill="white">• Real-time alerting</text>
+  
+  <!-- Flow Arrows -->
+  <!-- User to Frontend -->
+  <path d="M 195 150 L 195 170" stroke="#4F46E5" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="200" y="165" font-family="Arial, sans-serif" font-size="10" fill="#4F46E5">User</text>
+  
+  <!-- Frontend to Backend -->
+  <path d="M 320 230 L 350 230" stroke="#059669" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Backend to AI Models -->
+  <path d="M 490 290 L 490 320" stroke="#DC2626" stroke-width="3" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- AI Models to Data -->
+  <path d="M 630 380 L 680 355" stroke="#1F2937" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 630 400 L 680 435" stroke="#1F2937" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Monitoring Flow -->
+  <path d="M 195 610 L 195 650" stroke="#EA580C" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 350 550 L 380 550" stroke="#0F172A" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Reverse Proxy Routes -->
+  <path d="M 195 140 L 195 170" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 490 140 L 490 170" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <path d="M 505 140 L 505 490" stroke="#7C3AED" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  
+  <!-- Arrow marker definition -->
+  <defs>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#374151" />
+    </marker>
+  </defs>
+  
+  <!-- Legend -->
+  <rect x="920" y="170" width="250" height="280" rx="10" fill="white" stroke="#E5E7EB" stroke-width="1" filter="url(#shadow)"/>
+  <text x="935" y="195" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#1F2937">Legend</text>
+  
+  <rect x="935" y="210" width="15" height="15" fill="url(#frontendGrad)"/>
+  <text x="955" y="222" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Frontend Layer</text>
+  
+  <rect x="935" y="230" width="15" height="15" fill="url(#backendGrad)"/>
+  <text x="955" y="242" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Backend API Layer</text>
+  
+  <rect x="935" y="250" width="15" height="15" fill="url(#aiGrad)"/>
+  <text x="955" y="262" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">AI Model Layer</text>
+  
+  <rect x="935" y="270" width="15" height="15" fill="url(#monitorGrad)"/>
+  <text x="955" y="282" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Monitoring Layer</text>
+  
+  <rect x="935" y="290" width="15" height="15" fill="#0F172A"/>
+  <text x="955" y="302" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Observability Layer</text>
+  
+  <rect x="935" y="310" width="15" height="15" fill="url(#proxyGrad)"/>
+  <text x="955" y="322" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Reverse Proxy Layer</text>
+  
+  <rect x="935" y="330" width="15" height="15" fill="url(#containerGrad)"/>
+  <text x="955" y="342" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Container Layer</text>
+  
+  <rect x="935" y="350" width="15" height="15" fill="#1F2937"/>
+  <text x="955" y="362" font-family="Arial, sans-serif" font-size="11" fill="#1F2937">Data Storage</text>
+  
+  <text x="935" y="385" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#1F2937">Data Flow:</text>
+  <path d="M 935 395 L 955 395" stroke="#4F46E5" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="960" y="399" font-family="Arial, sans-serif" font-size="10" fill="#1F2937">User Requests</text>
+  
+  <path d="M 935 410 L 955 410" stroke="#EA580C" stroke-width="2" fill="none" marker-end="url(#arrowhead)"/>
+  <text x="960" y="414" font-family="Arial, sans-serif" font-size="10" fill="#1F2937">Metrics Flow</text>
+  
+  <text x="935" y="435" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">Created for FlashFit AI Phase 2</text>
+  <text x="935" y="447" font-family="Arial, sans-serif" font-size="10" fill="#6B7280">Production-Ready Architecture</text>
+  
+  <!-- Metrics Collection Indicators -->
+  <text x="200" y="680" font-family="Arial, sans-serif" font-size="10" fill="#EA580C">Metrics</text>
+  <text x="505" y="680" font-family="Arial, sans-serif" font-size="10" fill="#0F172A">Prometheus</text>
+  <text x="600" y="680" font-family="Arial, sans-serif" font-size="10" fill="#0F172A">Grafana</text>
+  
+</svg>

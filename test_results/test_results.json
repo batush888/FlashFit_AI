@@ -1,0 +1,37 @@
+{
+  "timestamp": "2025-09-01T23:33:59.048823",
+  "dataset_path": "/Users/Batu/Downloads/SPSS_v20_MacOS/Administration/Lesson1/FlashFit_AI/data/datasets",
+  "tests": {
+    "dataset_loading": {
+      "status": "failed",
+      "error": "FashionDataset.__init__() got an unexpected keyword argument 'transform_type'"
+    },
+    "model_architecture": {
+      "status": "failed",
+      "error": "mat1 and mat2 shapes cannot be multiplied (2x128 and 119x16384)"
+    },
+    "training_pipeline": {
+      "status": "failed",
+      "error": "FashionTrainer.__init__() missing 1 required positional argument: 'model'"
+    },
+    "prediction_system": {
+      "status": "failed",
+      "error": "'model_state_dict'"
+    },
+    "generation_system": {
+      "status": "failed",
+      "error": "linear(): input and weight.T shapes cannot be multiplied (3x128 and 148x16384)"
+    },
+    "end_to_end_workflow": {
+      "status": "failed",
+      "error": "FashionTrainer.__init__() missing 1 required positional argument: 'model'"
+    }
+  },
+  "summary": {
+    "total_tests": 6,
+    "passed_tests": 0,
+    "failed_tests": 6,
+    "success_rate": 0.0,
+    "overall_status": "failed"
+  }
+}

@@ -1,0 +1,269 @@
+# FlashFit AI Monitoring Configuration
+# Modular monitoring system configuration
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 9090
+  collection_interval: 30  # seconds
+  
+# Data Storage Configuration
+storage:
+  redis:
+    enabled: true
+    url: "redis://localhost:6379/0"
+    metrics_ttl: 3600  # 1 hour
+    
+  postgresql:
+    enabled: false  # Set to true in production
+    url: "postgresql://user:password@localhost:5432/flashfit"
+    
+# Service Endpoints for Health Monitoring
+services:
+  backend:
+    url: "http://localhost:8080"
+    health_endpoint: "/health"
+    timeout: 5
+    
+  frontend:
+    url: "http://localhost:3000"
+    health_endpoint: "/"
+    timeout: 5
+    
+  faiss-monitor:
+    url: "http://localhost:9091"
+    health_endpoint: "/metrics"
+    timeout: 5
+
+# Alert Configuration
+alerting:
+  enabled: true
+  
+  # Alert Rules (can be overridden/extended)
+  rules:
+    system:
+      high_cpu:
+        metric: "flashfit_cpu_usage_percent"
+        operator: "gt"
+        threshold: 80.0
+        duration_minutes: 5
+        severity: "warning"
+        description: "CPU usage is above 80% for more than 5 minutes"
+        
+      critical_cpu:
+        metric: "flashfit_cpu_usage_percent"
+        operator: "gt"
+        threshold: 95.0
+        duration_minutes: 2
+        severity: "critical"
+        description: "CPU usage is above 95% for more than 2 minutes"
+        
+      high_memory:
+        metric: "flashfit_memory_usage_percent"
+        operator: "gt"
+        threshold: 85.0
+        duration_minutes: 5
+        severity: "warning"
+        description: "Memory usage is above 85% for more than 5 minutes"
+        
+      critical_memory:
+        metric: "flashfit_memory_usage_percent"
+        operator: "gt"
+        threshold: 95.0
+        duration_minutes: 2
+        severity: "critical"
+        description: "Memory usage is above 95% for more than 2 minutes"
+        
+      high_disk:
+        metric: "flashfit_disk_usage_percent"
+        operator: "gt"
+        threshold: 90.0
+        duration_minutes: 10
+        severity: "warning"
+        description: "Disk usage is above 90% for more than 10 minutes"
+        
+    services:
+      service_down:
+        metric: "flashfit_service_health_status"
+        operator: "eq"
+        threshold: 0.0
+        duration_minutes: 1
+        severity: "critical"
+        description: "Service health check is failing"
+        
+      slow_response:
+        metric: "flashfit_service_response_time_seconds"
+        operator: "gt"
+        threshold: 5.0
+        duration_minutes: 3
+        severity: "warning"
+        description: "Service response time is above 5 seconds"
+        
+    faiss:
+      high_search_latency:
+        metric: "faiss_search_duration_seconds"
+        operator: "gt"
+        threshold: 1.0
+        duration_minutes: 3
+        severity: "warning"
+        description: "FAISS search latency is above 1 second"
+        
+      low_health_score:
+        metric: "faiss_health_score"
+        operator: "lt"
+        threshold: 50.0
+        duration_minutes: 5
+        severity: "warning"
+        description: "FAISS index health score is below 50"
+        
+      critical_health_score:
+        metric: "faiss_health_score"
+        operator: "lt"
+        threshold: 20.0
+        duration_minutes: 2
+        severity: "critical"
+        description: "FAISS index health score is critically low"
+        
+      high_error_rate:
+        metric: "faiss_errors_total"
+        operator: "gt"
+        threshold: 10.0
+        duration_minutes: 5
+        severity: "warning"
+        description: "FAISS error rate is too high"
+
+# Notification Configuration
+notifications:
+  # Log notifications (always enabled as fallback)
+  log:
+    enabled: true
+    level: "warning"
+    
+  # Email notifications
+  email:
+    enabled: false  # Set to true and configure for email alerts
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "your-email@gmail.com"
+    password: "your-app-password"  # Use app-specific password
+    to_emails:
+      - "admin@flashfit.ai"
+      - "devops@flashfit.ai"
+    
+  # Webhook notifications (e.g., Slack, Discord, PagerDuty)
+  webhook:
+    enabled: false
+    url: "https://hooks.slack.com/services/YOUR/SLACK/WEBHOOK"
+    headers:
+      Content-Type: "application/json"
+    # Custom payload template can be added here
+    
+  # Custom notification handlers can be added
+
+# Metrics Collection Configuration
+metrics:
+  # System metrics collection
+  system:
+    enabled: true
+    cpu_interval: 1  # seconds for CPU measurement
+    
+  # Service health checks
+  services:
+    enabled: true
+    check_interval: 30  # seconds
+    
+  # Redis metrics
+  redis:
+    enabled: true
+    
+  # Custom metrics from external sources
+  external:
+    enabled: true
+    sources:
+      - name: "faiss-monitor"
+        url: "http://localhost:9091/metrics"
+        format: "prometheus"
+        interval: 30
+
+# Data Retention Configuration
+retention:
+  metrics:
+    redis_hours: 24  # Keep metrics in Redis for 24 hours
+    postgres_days: 30  # Keep metrics in PostgreSQL for 30 days
+    
+  alerts:
+    history_hours: 168  # Keep alert history for 7 days
+    
+# Performance Configuration
+performance:
+  # Thread pool sizes
+  collection_workers: 2
+  alert_workers: 1
+  
+  # Batch sizes
+  metrics_batch_size: 100
+  alerts_batch_size: 50
+  
+  # Timeouts
+  collection_timeout: 30
+  alert_timeout: 10
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # File logging (optional)
+  file:
+    enabled: false
+    path: "/var/log/flashfit/monitoring.log"
+    max_size_mb: 100
+    backup_count: 5
+    
+# Development/Debug Configuration
+development:
+  enabled: true
+  mock_services: false  # Mock service responses for testing
+  debug_metrics: false  # Enable debug metrics collection
+  
+# Production Configuration
+production:
+  enabled: false
+  
+  # Enhanced security
+  auth:
+    enabled: false
+    api_key: "your-secure-api-key"
+    
+  # Enhanced monitoring
+  self_monitoring:
+    enabled: true
+    health_check_interval: 60
+    
+  # Resource limits
+  limits:
+    max_memory_mb: 512
+    max_cpu_percent: 50
+    
+# Integration Configuration
+integrations:
+  # Prometheus integration
+  prometheus:
+    enabled: true
+    registry: "default"
+    
+  # Grafana integration
+  grafana:
+    enabled: false
+    url: "http://localhost:3001"
+    api_key: "your-grafana-api-key"
+    
+  # External monitoring systems
+  external:
+    datadog:
+      enabled: false
+      api_key: "your-datadog-api-key"
+      
+    newrelic:
+      enabled: false
+      license_key: "your-newrelic-license-key"

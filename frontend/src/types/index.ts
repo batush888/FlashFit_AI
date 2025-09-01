@@ -26,13 +26,23 @@ export interface RegisterRequest {
 // 服装相关类型
 export interface WardrobeItem {
   id: string;
+  item_id: string;
   filename: string;
   url: string;
   garment_type: string;
+  garment_type_cn: string;
   dominant_color: string;
   style_keywords: string[];
   tags: string[];
   created_at: string;
+  upload_time: string;
+  colors?: Array<{
+    rgb: number[];
+    hex: string;
+    name: string;
+    name_cn: string;
+    percentage: number;
+  }>;
   embeddings?: number[];
 }
 

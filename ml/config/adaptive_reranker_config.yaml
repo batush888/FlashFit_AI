@@ -1,0 +1,280 @@
+# Adaptive Fusion Reranker Configuration
+# This file defines all parameters for training the meta-learning adaptive reranker
+
+# Model Architecture
+model:
+  embedding_dim: 512
+  num_models: 3  # CLIP, BLIP, Fashion Encoder
+  hidden_dim: 256
+  num_attention_heads: 8
+  dropout_rate: 0.1
+  
+  # Meta-learner specific settings
+  meta_learner:
+    input_dim: 1024  # Context + confidence features
+    hidden_layers: [512, 256, 128]
+    output_dim: 3  # Number of model weights
+    activation: "relu"
+    batch_norm: true
+    
+  # Weight adaptation settings
+  weight_adaptation:
+    temperature: 1.0  # Softmax temperature for weight normalization
+    min_weight: 0.05  # Minimum weight for any model
+    max_weight: 0.8   # Maximum weight for any model
+    adaptation_rate: 0.1  # How quickly weights adapt
+
+# Training Configuration
+training:
+  # Optimization
+  meta_learning_rate: 1e-4
+  weight_decay: 1e-5
+  gradient_clip_norm: 1.0
+  
+  # Batch settings
+  batch_size: 32
+  epochs: 100
+  validation_split: 0.2
+  
+  # Learning rate scheduling
+  scheduler:
+    type: "cosine"  # Options: cosine, step, exponential
+    warmup_epochs: 10
+    min_lr: 1e-6
+    
+  # Early stopping
+  early_stopping:
+    patience: 15
+    min_delta: 1e-4
+    monitor: "val_ndcg"  # Metric to monitor
+    mode: "max"  # maximize NDCG
+    
+  # Online learning settings
+  online_learning:
+    enabled: true
+    buffer_size: 1000  # Size of experience replay buffer
+    update_frequency: 10  # Update every N feedback samples
+    learning_rate: 1e-5  # Lower LR for online updates
+
+# Data Configuration
+data:
+  # Synthetic data generation
+  num_users: 100
+  num_items: 1000
+  sessions_per_user: 10
+  recommendations_per_session: 20
+  
+  # User profile diversity
+  user_archetypes:
+    - name: "visual_focused"
+      clip_preference: 0.7
+      blip_preference: 0.2
+      fashion_preference: 0.1
+      weight: 0.2
+      
+    - name: "description_focused"
+      clip_preference: 0.2
+      blip_preference: 0.7
+      fashion_preference: 0.1
+      weight: 0.2
+      
+    - name: "fashion_expert"
+      clip_preference: 0.1
+      blip_preference: 0.2
+      fashion_preference: 0.7
+      weight: 0.2
+      
+    - name: "balanced"
+      clip_preference: 0.33
+      blip_preference: 0.33
+      fashion_preference: 0.34
+      weight: 0.3
+      
+    - name: "visual_fashion"
+      clip_preference: 0.5
+      blip_preference: 0.1
+      fashion_preference: 0.4
+      weight: 0.1
+  
+  # Feedback simulation
+  feedback_simulation:
+    consistency_range: [0.6, 0.95]  # User consistency in feedback
+    noise_std_range: [0.1, 0.3]     # Noise in user preferences
+    position_bias: 0.02             # Penalty for lower-ranked items
+    engagement_threshold: 0.3       # Minimum score for engagement
+    
+  # Data augmentation
+  augmentation:
+    enabled: true
+    temporal_shift: true      # Simulate different times of day
+    seasonal_variation: true  # Simulate seasonal preferences
+    context_noise: 0.1       # Add noise to context features
+
+# Loss Functions
+loss:
+  # Primary loss weights
+  weights:
+    ranking_loss: 1.0
+    consistency_loss: 0.5
+    diversity_loss: 0.2
+    
+  # Ranking loss settings
+  ranking_loss:
+    type: "listwise"  # Options: pointwise, pairwise, listwise
+    margin: 0.1
+    
+  # Consistency loss (encourage stable weights for similar contexts)
+  consistency_loss:
+    enabled: true
+    temperature: 0.1
+    
+  # Diversity loss (encourage weight diversity across users)
+  diversity_loss:
+    enabled: true
+    target_entropy: 1.0  # Target entropy for weight distribution
+
+# Evaluation Metrics
+evaluation:
+  metrics:
+    - "ndcg@5"
+    - "ndcg@10"
+    - "map"
+    - "precision@5"
+    - "recall@10"
+    - "weight_diversity"
+    - "user_satisfaction"
+    
+  # Evaluation frequency
+  eval_frequency: 5  # Evaluate every N epochs
+  
+  # Test set evaluation
+  test_evaluation:
+    enabled: true
+    test_split: 0.2
+    stratify_by_user: true
+
+# Logging and Monitoring
+logging:
+  level: "INFO"
+  log_dir: "logs/adaptive_reranker"
+  
+  # Weights & Biases integration
+  wandb:
+    enabled: false
+    project: "flashfit-adaptive-reranker"
+    entity: "flashfit-ai"
+    tags: ["meta-learning", "fusion", "reranking"]
+    
+  # TensorBoard logging
+  tensorboard:
+    enabled: true
+    log_dir: "runs/adaptive_reranker"
+    
+  # Model checkpointing
+  checkpointing:
+    enabled: true
+    save_frequency: 10  # Save every N epochs
+    keep_best_only: false
+    save_optimizer_state: true
+
+# Storage and Caching
+storage:
+  # Redis configuration for user embeddings
+  redis:
+    enabled: false  # Set to true if Redis is available
+    host: "localhost"
+    port: 6379
+    db: 0
+    password: null
+    
+    # Key settings
+    key_prefix: "flashfit:reranker:"
+    embedding_ttl: 86400  # 24 hours in seconds
+    
+  # Local storage fallback
+  local_storage:
+    enabled: true
+    cache_dir: "cache/adaptive_reranker"
+    max_cache_size: "1GB"
+    
+# Hardware Configuration
+hardware:
+  device: "auto"  # Options: auto, cuda, cpu
+  num_workers: 4
+  pin_memory: true
+  
+  # Mixed precision training
+  mixed_precision:
+    enabled: false  # Enable for faster training on modern GPUs
+    opt_level: "O1"
+    
+  # Distributed training
+  distributed:
+    enabled: false
+    backend: "nccl"
+    world_size: 1
+    rank: 0
+
+# Experiment Configuration
+experiment:
+  name: "adaptive_reranker_v1"
+  description: "Meta-learning adaptive fusion reranker with synthetic feedback"
+  version: "1.0.0"
+  
+  # Reproducibility
+  seed: 42
+  deterministic: true
+  
+  # Experiment tracking
+  tags:
+    - "meta-learning"
+    - "adaptive-weights"
+    - "fusion-reranking"
+    - "phase2"
+    
+  # Notes
+  notes: |
+    Training adaptive fusion reranker with meta-learning capabilities.
+    Key features:
+    - Dynamic weight computation based on user context
+    - Online learning from user feedback
+    - Multi-objective optimization (ranking + consistency + diversity)
+    - Synthetic feedback generation for training
+
+# Paths
+paths:
+  # Model paths
+  model_save_dir: "models/adaptive_reranker"
+  checkpoint_dir: "checkpoints/adaptive_reranker"
+  
+  # Data paths
+  data_dir: "data/adaptive_reranker"
+  cache_dir: "cache/adaptive_reranker"
+  
+  # Output paths
+  results_dir: "results/adaptive_reranker"
+  plots_dir: "plots/adaptive_reranker"
+  logs_dir: "logs/adaptive_reranker"
+
+# Advanced Settings
+advanced:
+  # Gradient accumulation
+  gradient_accumulation_steps: 1
+  
+  # Memory optimization
+  memory_optimization:
+    enabled: false
+    checkpoint_activations: false
+    
+  # Profiling
+  profiling:
+    enabled: false
+    profile_memory: false
+    profile_compute: false
+    
+  # Debug settings
+  debug:
+    enabled: false
+    log_gradients: false
+    log_weights: false
+    detect_anomaly: false

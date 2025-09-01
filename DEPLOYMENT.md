@@ -2,18 +2,57 @@
 
 This guide covers the containerized production deployment of FlashFit AI with Docker Compose.
 
-## Architecture Overview
+## FlashFit AI Phase 2 Architecture Overview
 
-FlashFit AI uses a microservices architecture with the following components:
+![FlashFit AI Phase 2 Architecture](docs/flashfit-ai-phase2-architecture.svg)
+*FlashFit AI Phase 2 Architecture: Service layers, ports, data flow, and monitoring.*
 
-- **Backend API** (Port 8080): FastAPI application with ML models
-- **Frontend UI** (Port 3000): React application with Vite
-- **Monitoring Service** (Port 9090): Prometheus metrics and health checks
-- **PostgreSQL Database** (Port 5432): Primary data storage
-- **Redis Cache** (Port 6379): Session and caching layer
-- **Nginx Reverse Proxy** (Port 80/443): Unified access point
-- **Prometheus** (Port 9091): Metrics collection
-- **Grafana** (Port 3001): Monitoring dashboards
+### System Architecture
+
+FlashFit AI Phase 2 implements a comprehensive microservices architecture with advanced AI models, monitoring, and observability:
+
+**Service Layers & Ports:**
+- **Frontend Layer** (Port 3000): Vite development server with React UI, production-ready builds
+- **Backend API Layer** (Port 8080): FastAPI server with endpoints `/api/recommend`, `/api/feedback`, `/api/faiss`, `/api/wardrobe`
+- **AI Model Layer**: Tri-model ensemble (CLIP Encoder, BLIP Captioner, Fashion Encoder) with adaptive fusion reranker
+- **Data Storage**: Redis (embeddings cache), PostgreSQL (persistent data), FAISS indices (vector search)
+- **Monitoring Layer**: Modular monitoring (Port 9092) and FAISS monitoring (Port 9091)
+- **Observability Layer**: Prometheus (Port 9090) metrics collection, Grafana (Port 3001) dashboards
+- **Reverse Proxy Layer**: Nginx/Traefik routing `/app` → Frontend, `/api` → Backend, `/metrics` → Monitoring
+- **Containerization Layer**: Docker orchestration via docker-compose.production.yml
+
+**Data Flow Architecture:**
+```
+User Request → Reverse Proxy → Frontend (3000) → Backend API (8080)
+                                                      ↓
+                                              AI Model Layer
+                                           (CLIP + BLIP + Fashion)
+                                                      ↓
+                                         Fusion Reranker + Personalization
+                                                      ↓
+                                    Redis (Embeddings) + PostgreSQL (Data)
+                                                      ↓
+                              FAISS Indices (Vector Search & Similarity)
+
+Metrics Flow:
+Services → Monitoring (9091/9092) → Prometheus (9090) → Grafana (3001)
+```
+
+**Advanced Features:**
+- **Per-user embeddings** with feedback loop integration for personalization
+- **Meta-learning adaptive fusion** for dynamic tri-model ensemble reranking
+- **FAISS index monitoring** with health metrics, search latency, and vector count tracking
+- **Real-time alerting** engine with configurable rules and email notifications
+- **Production-ready** reverse proxy with SSL termination, CORS, gzip, and rate limiting
+- **Comprehensive observability** with 16+ metrics across all system components
+
+**Access Points:**
+- Frontend Application: [http://localhost:3000/app](http://localhost:3000/app)
+- Backend API: [http://localhost:8080/api](http://localhost:8080/api)
+- Modular Monitoring: [http://localhost:9092/metrics](http://localhost:9092/metrics)
+- FAISS Monitoring: [http://localhost:9091/metrics](http://localhost:9091/metrics)
+- Prometheus: [http://localhost:9090](http://localhost:9090)
+- Grafana Dashboard: [http://localhost:3001](http://localhost:3001) (admin/flashfit_admin)
 
 ## Prerequisites
 
