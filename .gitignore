@@ -1,4 +1,5 @@
 node_modules
+data/outfit_items_dataset
 .env
 #Environment and Configuration Files:
 .env.example
