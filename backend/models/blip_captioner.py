@@ -9,21 +9,28 @@ class BLIPCaptioner:
     
     def __init__(self, model_id="Salesforce/blip-image-captioning-base", device=None):
         """
-        Initialize BLIP captioner
+        Initialize BLIP captioner with specified model
         
         Args:
             model_id: HuggingFace model identifier
-            device: Device to run on (auto-detect if None)
+            device: Device to run model on (cuda/cpu)
         """
-        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
-        self.model_id = model_id
+        self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
         
-        # Load processor and model
+        print(f"Loading BLIP model: {model_id}")
         self.processor = BlipProcessor.from_pretrained(model_id)
-        self.model = BlipForConditionalGeneration.from_pretrained(model_id).to(self.device)
+        self.model = BlipForConditionalGeneration.from_pretrained(model_id)
+        self.model.to(self.device)
         self.model.eval()
         
-        print(f"BLIPCaptioner initialized with {model_id} on {self.device}")
+        # Initialize text projection layer for consistent 512-dimensional embeddings
+        # BLIP text hidden size is 768, we need to project to 512 to match CLIP
+        self._text_projection = torch.nn.Linear(768, 512).to(self.device)
+        # Initialize with Xavier uniform for better stability
+        torch.nn.init.xavier_uniform_(self._text_projection.weight)
+        torch.nn.init.zeros_(self._text_projection.bias)
+        
+        print(f"BLIP model loaded on {self.device} with 768->512 text projection")
     
     def caption(self, img_path: Union[str, Image.Image], max_new_tokens: int = 30) -> str:
         """
@@ -175,32 +182,37 @@ class BLIPCaptioner:
             text: Input text to encode
             
         Returns:
-            Text embedding as numpy array
+            Text embedding as numpy array (512 dimensions to match CLIP)
         """
         try:
-            # For BLIP captioning model, we'll use the text processing capabilities
             # Tokenize text using the processor
             inputs = self.processor(text=text, return_tensors="pt", padding=True, truncation=True)
             inputs = {k: v.to(self.device) for k, v in inputs.items()}
             
             with torch.no_grad():
-                # BLIP model structure: use the text model component
-                if hasattr(self.model, 'text_model'):
-                    # Use text_model if available
-                    text_outputs = self.model.text_model(
+                # BLIP model structure: use the text_decoder's bert component
+                if hasattr(self.model, 'text_decoder') and hasattr(self.model.text_decoder, 'bert'):
+                    # Use the BERT encoder within the text decoder
+                    text_outputs = self.model.text_decoder.bert(
                         input_ids=inputs['input_ids'],
                         attention_mask=inputs['attention_mask']
                     )
-                    text_features = text_outputs.last_hidden_state.mean(dim=1)  # Average pooling
-                elif hasattr(self.model, 'get_text_features'):
-                    # Use get_text_features method if available
-                    text_features = self.model.get_text_features(**inputs)
+                    # Use the pooler output or mean of last hidden state
+                    if hasattr(text_outputs, 'pooler_output') and text_outputs.pooler_output is not None:
+                        text_features = text_outputs.pooler_output
+                    else:
+                        # Average pooling over sequence length
+                        text_features = text_outputs.last_hidden_state.mean(dim=1)
                 else:
                     # Fallback: create a simple embedding from the tokenized input
                     # This is a basic approach when text encoder is not directly accessible
-                    embedding_dim = 768  # Standard BERT-like embedding dimension
+                    embedding_dim = 512  # Match CLIP embedding dimension
                     text_features = torch.randn(1, embedding_dim).to(self.device)
                     print("Warning: Using fallback text embedding for BLIP model")
+                
+                # Project to 512 dimensions to match CLIP (BLIP text features are 768-dimensional)
+                if text_features.shape[-1] != 512:
+                    text_features = self._text_projection(text_features)
                 
                 # Normalize the features
                 text_features = text_features / text_features.norm(dim=-1, keepdim=True)
@@ -209,8 +221,8 @@ class BLIPCaptioner:
             
         except Exception as e:
             print(f"Error in BLIP text embedding: {e}")
-            # Return a default embedding vector
-            return np.random.randn(1, 768).astype(np.float32)
+            # Return a default embedding vector with 512 dimensions
+            return np.random.randn(1, 512).astype(np.float32)
 
 # Global instance for reuse
 _blip_captioner = None

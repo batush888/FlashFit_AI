@@ -58,7 +58,7 @@ def test_individual_components():
         
         print("4. Testing Vector Stores...")
         clip_store = get_clip_store(dim=512)
-        blip_store = get_blip_store(dim=768)
+        blip_store = get_blip_store(dim=512)
         fashion_store = get_fashion_store(dim=512)
         print(f"   ✓ Vector stores initialized")
         print(f"     - CLIP store: {clip_store.get_stats()['total_vectors']} vectors")

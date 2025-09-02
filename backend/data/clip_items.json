@@ -1,8 +1,58 @@
 [
   {
-    "item_id": "item_e7495c7dcdd34d0d863ce9b731497c40",
-    "user_id": "user_3_1756552528",
-    "image_path": "data/uploads/user_3_1756552528/user_3_1756552528_d1177182926d4faba6a6da46846dc3b2.jpg",
+    "item_id": "item_964537a9a9a44e89aa2d5bfd3bd5d9b2",
+    "user_id": "user_1_1756819007",
+    "image_path": "data/uploads/user_1_1756819007/user_1_1756819007_1971ba49530e42e18735f8e3df12614a.jpg",
+    "garment_type": "shirt",
+    "colors": [
+      {
+        "rgb": [
+          254,
+          0,
+          0
+        ],
+        "hex": "#fe0000",
+        "name": "red",
+        "percentage": 100.0
+      }
+    ],
+    "style_keywords": [
+      "清晰",
+      "shirt",
+      "red"
+    ],
+    "blip_caption": "a red background with a white border",
+    "upload_time": "2025-09-02T21:30:08.370995"
+  },
+  {
+    "item_id": "item_cce81c359e1342c99af0a844702b1c30",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_717033210403417c9bd3c18408d546c5.webp",
+    "garment_type": "t-shirt",
+    "colors": [
+      {
+        "rgb": [
+          127,
+          127,
+          128
+        ],
+        "hex": "#7f7f80",
+        "name": "gray",
+        "percentage": 93.3
+      }
+    ],
+    "style_keywords": [
+      "t-shirt",
+      "清晰",
+      "gray"
+    ],
+    "blip_caption": "a black t - shirt with a white logo on the front",
+    "upload_time": "2025-09-02T21:33:53.931882"
+  },
+  {
+    "item_id": "item_2dd9e378ea5e4682b51a07b6f4ae3fdc",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_45fed92250914a429a5657a1b44741ac.jpg",
     "garment_type": "shorts",
     "colors": [
       {
@@ -37,68 +87,64 @@
       }
     ],
     "style_keywords": [
-      "shorts",
+      "清晰",
       "white",
       "beige",
-      "清晰"
+      "shorts"
     ],
     "blip_caption": "a white sneaker with a beige sole and a white sole",
-    "upload_time": "2025-09-02T18:49:31.919494"
+    "upload_time": "2025-09-02T21:36:47.873441"
   },
   {
-    "item_id": "item_8ce4da36fb2c4654909b1c31495c1079",
-    "user_id": "user_3_1756552528",
-    "image_path": "data/uploads/user_3_1756552528/user_3_1756552528_5e5a8b924c2c481fa6baa033779377ee.webp",
-    "garment_type": "t-shirt",
-    "colors": [
-      {
-        "rgb": [
-          127,
-          127,
-          128
-        ],
-        "hex": "#7f7f80",
-        "name": "gray",
-        "percentage": 93.3
-      }
-    ],
-    "style_keywords": [
-      "清晰",
-      "gray",
-      "t-shirt"
-    ],
-    "blip_caption": "a black t - shirt with a white logo on the front",
-    "upload_time": "2025-09-02T18:50:01.072570"
-  },
-  {
-    "item_id": "item_8c72a556f31047d48ad3a53c35a84750",
-    "user_id": "user_3_1756552528",
-    "image_path": "data/uploads/user_3_1756552528/user_3_1756552528_2b05e7f0f99d45c987c239afd0512395.webp",
+    "item_id": "item_61d7f9e6984a4f29b8fa369cb62405df",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_6902d5a2b9134b12837cbd0cd2732b48.jpg",
     "garment_type": "shirt",
     "colors": [
       {
         "rgb": [
-          127,
-          128,
-          128
+          225,
+          223,
+          213
         ],
-        "hex": "#7f8080",
-        "name": "gray",
-        "percentage": 99.7
+        "hex": "#e1dfd5",
+        "name": "white",
+        "percentage": 42.8
+      },
+      {
+        "rgb": [
+          164,
+          187,
+          211
+        ],
+        "hex": "#a4bbd3",
+        "name": "blue",
+        "percentage": 20.9
+      },
+      {
+        "rgb": [
+          209,
+          206,
+          197
+        ],
+        "hex": "#d1cec5",
+        "name": "white",
+        "percentage": 20.4
       }
     ],
     "style_keywords": [
       "清晰",
-      "gray",
-      "shirt"
+      "shirt",
+      "blue",
+      "white"
     ],
-    "blip_caption": "a black hoodie sweatshirt with a hoodie on the back",
-    "upload_time": "2025-09-02T18:50:22.230960"
+    "blip_caption": "a blue shirt hanging on a wall",
+    "upload_time": "2025-09-02T21:39:47.586851"
   },
   {
-    "item_id": "item_aff44247a6a44b8fae3695dd800b5f36",
-    "user_id": "user_3_1756552528",
-    "image_path": "data/uploads/user_3_1756552528/user_3_1756552528_e3d6a93896bd4fe1b06edadffe5ab383.jpg",
+    "item_id": "item_5e3fcdcc5adb419a915a33a85c6820b0",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_c63d45006107477c8dd7a9a41724ef7a.jpg",
     "garment_type": "jacket",
     "colors": [
       {
@@ -133,29 +179,99 @@
       }
     ],
     "style_keywords": [
+      "beige",
       "清晰",
       "white",
-      "beige",
       "jacket"
     ],
     "blip_caption": "a picture of a tan shorts",
-    "upload_time": "2025-09-02T18:50:46.569101"
+    "upload_time": "2025-09-02T21:40:16.286856"
   },
   {
-    "item_id": "item_ec6dbd99431a4c00b3ca4e888636bfe8",
-    "user_id": "user_3_1756552528",
-    "image_path": "data/uploads/user_3_1756552528/user_3_1756552528_253a908c9d8f4ef68103c709818f5a50.webp",
+    "item_id": "item_c875f838d1f44a81ae27c642791e1c03",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_d87cd36ccd394facbc0f45f862bd0816.webp",
+    "garment_type": "shirt",
+    "colors": [
+      {
+        "rgb": [
+          127,
+          128,
+          128
+        ],
+        "hex": "#7f8080",
+        "name": "gray",
+        "percentage": 99.7
+      }
+    ],
+    "style_keywords": [
+      "清晰",
+      "shirt",
+      "gray"
+    ],
+    "blip_caption": "a black hoodie sweatshirt with a hoodie on the back",
+    "upload_time": "2025-09-02T21:44:03.576070"
+  },
+  {
+    "item_id": "item_809aef700bfd48a78788620c1dddccab",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_cacdf5d0b19546338c5bca568ac00a23.webp",
+    "garment_type": "t-shirt",
+    "colors": [
+      {
+        "rgb": [
+          127,
+          127,
+          128
+        ],
+        "hex": "#7f7f80",
+        "name": "gray",
+        "percentage": 93.3
+      }
+    ],
+    "style_keywords": [
+      "t-shirt",
+      "清晰",
+      "gray"
+    ],
+    "blip_caption": "a black t - shirt with a white logo on the front",
+    "upload_time": "2025-09-02T21:47:42.041222"
+  },
+  {
+    "item_id": "item_66a45cef1f124d4e8398fb6f297d86af",
+    "user_id": "user_2_1756819994",
+    "image_path": "data/uploads/user_2_1756819994/user_2_1756819994_468e0e6660d64954a317bde9c1133a08.webp",
     "garment_type": "jacket",
     "colors": [
       {
         "rgb": [
-          238,
-          238,
-          236
+          240,
+          240,
+          241
         ],
-        "hex": "#eeeeec",
+        "hex": "#f0f0f1",
         "name": "white",
-        "percentage": 98.9
+        "percentage": 51.4
+      },
+      {
+        "rgb": [
+          230,
+          230,
+          231
+        ],
+        "hex": "#e6e6e7",
+        "name": "white",
+        "percentage": 34.1
+      },
+      {
+        "rgb": [
+          204,
+          203,
+          206
+        ],
+        "hex": "#cccbce",
+        "name": "white",
+        "percentage": 9.0
       }
     ],
     "style_keywords": [
@@ -163,7 +279,32 @@
       "white",
       "jacket"
     ],
-    "blip_caption": "black bomber jacket for men ken",
-    "upload_time": "2025-09-02T18:51:04.948423"
+    "blip_caption": "a man wearing a white shirt and jeans",
+    "upload_time": "2025-09-02T22:01:49.641610"
+  },
+  {
+    "item_id": "item_af347d94932c45b688252633b8523542",
+    "user_id": "user_3_1756822893",
+    "image_path": "data/uploads/user_3_1756822893/user_3_1756822893_707e64d0c99849458038b10c91daae70.jpg",
+    "garment_type": "shirt",
+    "colors": [
+      {
+        "rgb": [
+          254,
+          0,
+          0
+        ],
+        "hex": "#fe0000",
+        "name": "red",
+        "percentage": 100.0
+      }
+    ],
+    "style_keywords": [
+      "shirt",
+      "red",
+      "清晰"
+    ],
+    "blip_caption": "a red background with a white border",
+    "upload_time": "2025-09-02T22:29:43.701028"
   }
 ]

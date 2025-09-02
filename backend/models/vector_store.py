@@ -251,6 +251,14 @@ _clip_store = None
 _blip_store = None
 _fashion_store = None
 
+# Force reset global instances to ensure updated dimensions
+def reset_global_stores():
+    """Reset all global store instances to force reinitialization with updated dimensions"""
+    global _clip_store, _blip_store, _fashion_store
+    _clip_store = None
+    _blip_store = None
+    _fashion_store = None
+
 def get_clip_store(dim: int = 512) -> VectorStore:
     """Get global CLIP vector store instance"""
     global _clip_store
@@ -258,7 +266,7 @@ def get_clip_store(dim: int = 512) -> VectorStore:
         _clip_store = VectorStore(dim, "data/clip_fashion.index", "data/clip_items.json")
     return _clip_store
 
-def get_blip_store(dim: int = 768) -> VectorStore:
+def get_blip_store(dim: int = 512) -> VectorStore:
     """Get global BLIP vector store instance"""
     global _blip_store
     if _blip_store is None:

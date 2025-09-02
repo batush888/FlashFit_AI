@@ -46,7 +46,7 @@ class UltimateAIService:
         
         # Initialize vector stores
         self.clip_store = get_clip_store(dim=512)
-        self.blip_store = get_blip_store(dim=768)
+        self.blip_store = get_blip_store(dim=512)
         self.fashion_store = get_fashion_store(dim=512)
         
         # Initialize fusion reranker

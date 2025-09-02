@@ -43,7 +43,7 @@ class UploadHandler:
         
         # Initialize vector stores
         self.clip_store = get_clip_store(dim=512)
-        self.blip_store = get_blip_store(dim=768)
+        self.blip_store = get_blip_store(dim=512)
         self.fashion_store = get_fashion_store(dim=512)
         
         print("上传处理器初始化完成")

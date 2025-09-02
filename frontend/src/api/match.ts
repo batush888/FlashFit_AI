@@ -51,6 +51,35 @@ export class MatchService {
   }
 
   /**
+   * 基于图片生成融合推荐
+   */
+  async generateFusionRecommendations(
+    imageFile: File,
+    targetCount: number = 5
+  ): Promise<ApiResponse<MatchResponse>> {
+    const formData = new FormData();
+    formData.append('file', imageFile);
+    formData.append('target_count', targetCount.toString());
+
+    return await api.upload('/api/fusion/match', formData);
+  }
+
+  /**
+   * 基于用户ID生成融合推荐
+   */
+  async generateFusionByUserId(
+    userId: string,
+    targetCount: number = 5
+  ): Promise<ApiResponse<MatchResponse>> {
+    const params = new URLSearchParams();
+    params.append('user_id', userId);
+    params.append('target_count', targetCount.toString());
+    
+    const url = `/api/fusion/match?${params.toString()}`;
+    return await api.get(url);
+  }
+
+  /**
    * 删除搭配建议
    */
   async deleteSuggestion(
@@ -346,4 +375,6 @@ export const {
   getMatchStats,
   validateMatchRequest,
   formatSuggestionForDisplay,
+  generateFusionRecommendations,
+  generateFusionByUserId,
 } = matchService;

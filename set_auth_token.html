@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set Authentication Token</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .step {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .code {
+            background: #f1f1f1;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .success {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .error {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>FlashFit AI - Authentication Setup</h1>
+        
+        <div class="step">
+            <h3>Step 1: Set Authentication Token</h3>
+            <p>Click the button below to automatically set the authentication token in your browser:</p>
+            <button onclick="setAuthToken()">Set Authentication Token</button>
+            <div id="tokenStatus"></div>
+        </div>
+        
+        <div class="step">
+            <h3>Step 2: Go to FlashFit AI</h3>
+            <p>After setting the token, you can access the FlashFit AI application:</p>
+            <a href="http://localhost:3000" target="_blank" style="display: inline-block; background: #28a745; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Open FlashFit AI</a>
+        </div>
+        
+        <div class="step">
+            <h3>Alternative: Manual Setup</h3>
+            <p>If the automatic setup doesn't work, you can manually set the token:</p>
+            <ol>
+                <li>Open your browser's Developer Tools (F12)</li>
+                <li>Go to the Console tab</li>
+                <li>Paste and run this command:</li>
+            </ol>
+            <div class="code">
+localStorage.setItem('auth_token', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzFfMTc1NjgxOTAwNyIsImV4cCI6MTc1NzQyNDE3MX0.Hk0r_ttGTSGe-Cjch9t_vDKrK9G8mvRqXlj6ZnINCE8');
+window.location.reload();
+            </div>
+        </div>
+        
+        <div class="step">
+            <h3>Test User Credentials</h3>
+            <p>You can also log in normally using these test credentials:</p>
+            <div class="code">
+Email: test@example.com<br>
+Password: password123
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function setAuthToken() {
+            try {
+                const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzFfMTc1NjgxOTAwNyIsImV4cCI6MTc1NzQyNDE3MX0.Hk0r_ttGTSGe-Cjch9t_vDKrK9G8mvRqXlj6ZnINCE8';
+                localStorage.setItem('auth_token', token);
+                document.getElementById('tokenStatus').innerHTML = '<p class="success">✓ Authentication token set successfully!</p>';
+                
+                // Test the token by making a request to the profile endpoint
+                fetch('http://localhost:8080/api/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.user_id) {
+                        document.getElementById('tokenStatus').innerHTML += '<p class="success">✓ Token verified! User: ' + data.email + '</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('tokenStatus').innerHTML += '<p class="error">⚠ Token set but verification failed. Please check if the backend is running.</p>';
+                });
+                
+            } catch (error) {
+                document.getElementById('tokenStatus').innerHTML = '<p class="error">✗ Failed to set token: ' + error.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

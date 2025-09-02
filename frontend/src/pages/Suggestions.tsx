@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { api, API_ENDPOINTS } from '../api/client';
+import { matchService } from '../api/match';
+import { useNotificationStore } from '../stores/notificationStore';
 
 interface OutfitSuggestion {
   id: string;
+  title_cn?: string;
   name: string;
   occasion: string;
   weather: string;
@@ -15,12 +19,119 @@ interface OutfitSuggestion {
   }[];
   confidence: number;
   tags: string[];
+  similarity_score?: number;
+  tips_cn?: string[];
+}
+
+interface FusionSuggestion {
+  id: string;
+  img_url: string;
+  tags: string[];
+  scores: {
+    clip: number;
+    blip: number;
+    fashion: number;
+    final: number;
+  };
+  metadata: {
+    type: string;
+    category: string;
+  };
 }
 
 const Suggestions = () => {
   const [selectedOccasion, setSelectedOccasion] = useState('all');
   const [selectedWeather, setSelectedWeather] = useState('all');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [outfitSuggestions, setOutfitSuggestions] = useState<OutfitSuggestion[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addNotification } = useNotificationStore();
+
+  // 处理图片上传
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setUploadedImage(file);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  // 清除上传的图片
+  const clearUploadedImage = () => {
+    setUploadedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // 生成融合推荐
+  const generateFusionRecommendations = async () => {
+    if (!uploadedImage) {
+      addNotification({
+        type: 'warning',
+        title: '提示',
+        message: '请先上传一张图片',
+        duration: 3000
+      });
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+       const response = await matchService.generateFusionRecommendations(uploadedImage, 5);
+       if (response.data?.suggestions) {
+         // Map API response to OutfitSuggestion format
+          const mappedSuggestions: OutfitSuggestion[] = response.data.suggestions.map((suggestion: any, index: number) => ({
+            id: suggestion.id || `fusion-${Date.now()}-${index}`,
+            title_cn: suggestion.title_cn || suggestion.name || '融合搭配建议',
+            name: suggestion.name || suggestion.title_cn || '融合搭配建议',
+            occasion: suggestion.occasion || 'casual',
+            weather: suggestion.weather || 'all',
+            style: suggestion.style || 'trendy',
+            items: suggestion.items?.map((item: any) => ({
+              id: item.id || item.item_id || `item-${index}`,
+              name: item.name || item.garment_type_cn || '服装单品',
+              category: item.category || item.garment_type || 'clothing',
+              image: item.image || item.url || '/placeholder.jpg'
+            })) || [],
+            confidence: suggestion.confidence || suggestion.similarity_score || 0.85,
+            tags: suggestion.tags || ['AI推荐', '融合搭配'],
+            similarity_score: suggestion.similarity_score || suggestion.confidence || 0.85,
+            tips_cn: suggestion.tips_cn || suggestion.tips || ['基于图片生成的个性化搭配']
+          }));
+         
+         setOutfitSuggestions(mappedSuggestions);
+         addNotification({
+           type: 'success',
+           title: '成功',
+           message: '基于图片生成了新的搭配建议！',
+           duration: 3000
+         });
+       }
+    } catch (error) {
+      console.error('Fusion recommendations error:', error);
+      setError('生成融合建议失败，请稍后重试');
+      addNotification({
+        type: 'error',
+        title: '错误',
+        message: '生成融合建议失败，请稍后重试',
+        duration: 5000
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const occasions = [
     { id: 'all', name: '全部场合', icon: '🌟' },
@@ -39,51 +150,117 @@ const Suggestions = () => {
     { id: 'cold', name: '寒冷', icon: '❄️' }
   ];
 
-  // Mock data for demonstration
-  const outfitSuggestions: OutfitSuggestion[] = [
-    {
-      id: '1',
-      name: '商务休闲风',
-      occasion: 'work',
-      weather: 'sunny',
-      style: 'business-casual',
-      confidence: 95,
-      tags: ['专业', '舒适', '现代'],
-      items: [
-        { id: '1', name: '白色衬衫', category: 'tops', image: '/api/placeholder/150/200' },
-        { id: '2', name: '深蓝色西装裤', category: 'bottoms', image: '/api/placeholder/150/200' },
-        { id: '3', name: '棕色皮鞋', category: 'shoes', image: '/api/placeholder/150/200' }
-      ]
-    },
-    {
-      id: '2',
-      name: '周末休闲',
-      occasion: 'casual',
-      weather: 'cloudy',
-      style: 'casual',
-      confidence: 88,
-      tags: ['轻松', '舒适', '时尚'],
-      items: [
-        { id: '4', name: '条纹T恤', category: 'tops', image: '/api/placeholder/150/200' },
-        { id: '5', name: '牛仔裤', category: 'bottoms', image: '/api/placeholder/150/200' },
-        { id: '6', name: '白色运动鞋', category: 'shoes', image: '/api/placeholder/150/200' }
-      ]
-    },
-    {
-      id: '3',
-      name: '优雅晚宴',
-      occasion: 'formal',
-      weather: 'sunny',
-      style: 'elegant',
-      confidence: 92,
-      tags: ['优雅', '正式', '经典'],
-      items: [
-        { id: '7', name: '黑色连衣裙', category: 'dresses', image: '/api/placeholder/150/200' },
-        { id: '8', name: '高跟鞋', category: 'shoes', image: '/api/placeholder/150/200' },
-        { id: '9', name: '珍珠项链', category: 'accessories', image: '/api/placeholder/150/200' }
-      ]
+  // Load initial recommendations on component mount
+  useEffect(() => {
+    loadRecommendations();
+  }, []);
+
+  // 生成基于衣橱的推荐
+  const generateMatchRecommendations = async () => {
+    try {
+      // 首先获取用户的衣橱物品
+      const wardrobeResponse = await api.get('/api/wardrobe');
+      
+      if (!wardrobeResponse.data?.data?.items || wardrobeResponse.data.data.items.length === 0) {
+        // 如果没有衣橱物品，显示提示并使用默认建议
+        throw new Error('没有衣橱物品可用于生成搭配建议');
+      }
+      
+      // 使用第一个衣橱物品的ID
+      const firstItemId = wardrobeResponse.data.data.items[0].item_id;
+      
+      // 调用 /api/match 端点
+      const response = await matchService.generateSuggestions({
+        item_id: firstItemId, // 使用实际的衣橱物品ID
+        occasion: selectedOccasion === 'all' ? undefined : selectedOccasion,
+        target_count: 5
+      });
+      
+      if (response.data?.suggestions) {
+        // Map API response to OutfitSuggestion format
+        const mappedSuggestions: OutfitSuggestion[] = response.data.suggestions.map((suggestion: any, index: number) => ({
+          id: suggestion.id || `match-${Date.now()}-${index}`,
+          title_cn: suggestion.title_cn || suggestion.name || '搭配建议',
+          name: suggestion.name || suggestion.title_cn || '搭配建议',
+          occasion: suggestion.occasion || selectedOccasion || 'casual',
+          weather: suggestion.weather || selectedWeather || 'all',
+          style: suggestion.style || 'casual',
+          items: suggestion.items?.map((item: any) => ({
+            id: item.id || item.item_id || `item-${index}`,
+            name: item.name || item.garment_type_cn || '服装单品',
+            category: item.category || item.garment_type || 'clothing',
+            image: item.image || item.url || '/placeholder.jpg'
+          })) || [],
+          confidence: suggestion.confidence || suggestion.similarity_score || 0.85,
+          tags: suggestion.tags || ['AI推荐', '衣橱搭配'],
+          similarity_score: suggestion.similarity_score || suggestion.confidence || 0.85,
+          tips_cn: suggestion.tips_cn || suggestion.tips || ['基于您的衣橱生成的搭配建议']
+        }));
+        
+        setOutfitSuggestions(mappedSuggestions);
+        addNotification({
+          type: 'success',
+          title: '成功',
+          message: '已生成基于衣橱的搭配建议！',
+          duration: 3000
+        });
+      }
+    } catch (error) {
+      console.error('Match recommendations error:', error);
+      setError('生成衣橱搭配失败，显示默认建议');
+      // 显示默认建议
+       await generateFallbackRecommendations();
+      addNotification({
+        type: 'warning',
+        title: '提示',
+        message: '暂无衣橱数据，显示默认建议',
+        duration: 3000
+      });
     }
-  ];
+  };
+
+  const loadRecommendations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Generate new recommendations directly since match history endpoint doesn't exist
+      await generateMatchRecommendations();
+    } catch (error) {
+      console.error('Failed to load recommendations:', error);
+      setError('加载推荐失败，请稍后重试');
+      await generateFallbackRecommendations();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateFallbackRecommendations = async () => {
+    // Create some template recommendations when no data is available
+    const fallbackSuggestions: OutfitSuggestion[] = [
+      {
+        id: 'fallback_1',
+        name: '商务休闲风',
+        occasion: 'work',
+        weather: 'all',
+        style: 'business-casual',
+        confidence: 85,
+        tags: ['专业', '舒适', '经典'],
+        items: []
+      },
+      {
+        id: 'fallback_2',
+        name: '周末休闲',
+        occasion: 'casual',
+        weather: 'all',
+        style: 'casual',
+        confidence: 80,
+        tags: ['轻松', '舒适', '时尚'],
+        items: []
+      }
+    ];
+    setOutfitSuggestions(fallbackSuggestions);
+  };
 
   const filteredSuggestions = outfitSuggestions.filter(suggestion => {
     const matchesOccasion = selectedOccasion === 'all' || suggestion.occasion === selectedOccasion;
@@ -91,16 +268,63 @@ const Suggestions = () => {
     return matchesOccasion && matchesWeather;
   });
 
-  const generateNewSuggestions = () => {
-    setIsGenerating(true);
-    // Simulate AI generation
-    setTimeout(() => {
+  const generateNewSuggestions = async () => {
+    try {
+      setIsGenerating(true);
+      setError(null);
+      
+      // Try to generate new recommendations using match endpoint
+      await generateMatchRecommendations();
+      
+      addNotification({
+        type: 'success',
+        title: '成功',
+        message: '已生成新的搭配建议！',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Failed to generate new suggestions:', error);
+      setError('生成新建议失败，请稍后重试');
+      addNotification({
+        type: 'error',
+        title: '错误',
+        message: '生成新建议失败，请稍后重试',
+        duration: 5000
+      });
+    } finally {
       setIsGenerating(false);
-    }, 2000);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-8 animate-fade-in">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
+          <h1 className="text-3xl font-bold mb-2">AI 穿搭建议</h1>
+          <p className="text-white/90">正在加载您的个性化搭配建议...</p>
+        </div>
+        <div className="bg-white rounded-2xl shadow-lg p-12 text-center border border-gray-100">
+          <div className="animate-spin w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">AI正在分析您的衣橱，生成个性化建议...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-700">
+          <div className="flex items-center">
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {error}
+          </div>
+        </div>
+      )}
+      
       {/* Header Section */}
       <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl shadow-xl p-8 text-white">
         <div className="flex items-center justify-between">
@@ -115,7 +339,7 @@ const Suggestions = () => {
             </div>
             <div className="w-px h-12 bg-white/20"></div>
             <div className="text-center">
-              <div className="text-2xl font-bold">95%</div>
+              <div className="text-2xl font-bold">{outfitSuggestions.length > 0 ? '85%' : '--'}</div>
               <div className="text-sm text-white/80">匹配度</div>
             </div>
           </div>
@@ -126,6 +350,58 @@ const Suggestions = () => {
       <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
           <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-6">
+            {/* Image Upload Section */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">图片上传</label>
+              <div className="flex items-center gap-4">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 flex items-center gap-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  上传图片
+                </button>
+                {imagePreview && (
+                  <div className="flex items-center gap-2">
+                    <img src={imagePreview} alt="Preview" className="w-12 h-12 object-cover rounded-lg" />
+                    <button
+                      onClick={clearUploadedImage}
+                      className="text-red-600 hover:text-red-700 transition-colors"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                {uploadedImage && (
+                  <button
+                    onClick={generateFusionRecommendations}
+                    disabled={loading}
+                    className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors duration-200 flex items-center gap-2"
+                  >
+                    {loading ? (
+                      <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                      </svg>
+                    )}
+                    融合推荐
+                  </button>
+                )}
+              </div>
+            </div>
+
             {/* Occasion Filter */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">场合</label>

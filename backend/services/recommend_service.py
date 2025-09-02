@@ -30,7 +30,7 @@ class RecommendationService:
         
         # Initialize vector stores
         self.clip_store = get_clip_store(dim=512)  # CLIP embedding dimension
-        self.blip_store = get_blip_store(dim=768)  # BLIP text embedding dimension
+        self.blip_store = get_blip_store(dim=512)  # BLIP text embedding dimension (updated to match projection)
         self.fashion_store = get_fashion_store(dim=512)  # Fashion encoder dimension
         
         # Initialize fusion reranker

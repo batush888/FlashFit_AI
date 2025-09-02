@@ -15,7 +15,7 @@ indices:
   blip_fashion:
     path: "data/blip_fashion.index"
     description: "BLIP model embeddings for fashion items"
-    expected_dimension: 768
+    expected_dimension: 512
     min_vectors: 1000
     max_age_hours: 24
     critical_latency_ms: 1000

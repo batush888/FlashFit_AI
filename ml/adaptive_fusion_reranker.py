@@ -64,7 +64,7 @@ class MetaLearner(nn.Module):
     """
     
     def __init__(self, 
-                 input_dim: int = 256,
+                 input_dim: int = 512,
                  hidden_dim: int = 128,
                  num_models: int = 3,  # CLIP, BLIP, Fashion Encoder
                  dropout_rate: float = 0.1):
@@ -180,7 +180,7 @@ class UserEmbeddingManager:
     """
     
     def __init__(self, 
-                 embedding_dim: int = 256,
+                 embedding_dim: int = 512,
                  learning_rate: float = 0.01,
                  decay_factor: float = 0.95,
                  redis_client: Optional[redis.Redis] = None):

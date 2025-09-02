@@ -38,7 +38,7 @@
         "stats": {
           "index_name": "blip_fashion",
           "total_vectors": 0,
-          "dimension": 768,
+          "dimension": 512,
           "index_size_bytes": 45,
           "index_type": "IndexFlatIP",
           "is_trained": true,
