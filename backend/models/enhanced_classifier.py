@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 import joblib
 import os
 from .clip_model import get_clip_model
-from .classifier import GarmentClassifier
+from .advanced_classifier import AdvancedGarmentClassifier
 
 class EnhancedGarmentClassifier:
     """
@@ -21,8 +21,8 @@ class EnhancedGarmentClassifier:
     def __init__(self):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
-        # 初始化基础分类器和CLIP模型
-        self.base_classifier = GarmentClassifier()
+        # 初始化高级分类器和CLIP模型
+        self.base_classifier = AdvancedGarmentClassifier()
         self.clip_model = get_clip_model()
         
         # 服装类别和置信度阈值

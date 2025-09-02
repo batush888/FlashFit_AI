@@ -13,11 +13,11 @@ import numpy as np
 # 添加当前目录到Python路径
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models.classifier import get_classifier
+from models.advanced_classifier import get_advanced_classifier
 
 def analyze_image_features(image_path, expected_category):
     """分析单个图像的详细特征"""
-    classifier = get_classifier()
+    classifier = get_advanced_classifier()
     
     print(f"\n{'='*60}")
     print(f"📸 分析图像: {os.path.basename(image_path)}")
@@ -29,16 +29,8 @@ def analyze_image_features(image_path, expected_category):
         image = Image.open(image_path)
         print(f"图像尺寸: {image.size}")
         
-        # 提取特征
-        features = classifier._extract_features(image)
-        aspect_ratio = features['aspect_ratio']
-        edge_density = features['edge_density']
-        color_variance = features['color_variance']
-        
-        print(f"\n🔍 提取的特征:")
-        print(f"  长宽比 (aspect_ratio): {aspect_ratio:.4f}")
-        print(f"  边缘密度 (edge_density): {edge_density:.4f}")
-        print(f"  颜色方差 (color_variance): {color_variance:.4f}")
+        # 使用高级分类器进行分析
+        print(f"\n🔍 使用高级分类器进行特征分析")
         
         # 执行分类
         result = classifier.classify_garment(image_path)
@@ -50,74 +42,25 @@ def analyze_image_features(image_path, expected_category):
         print(f"  置信度: {confidence:.1%}")
         print(f"  是否正确: {'✅ 是' if predicted_category == expected_category else '❌ 否'}")
         
-        # 检查每个规则的匹配情况（按当前分类器的顺序）
-        print(f"\n📋 规则匹配分析:")
+        # 高级分类器分析
+        print(f"\n🧠 高级分类器使用机器学习进行智能分类")
+        print(f"   ✓ 使用CLIP嵌入和神经网络特征进行分类")
         
-        # 规则1: dress
-        dress_match = aspect_ratio > 1.2 and edge_density < 0.15
-        print(f"  规则1 (dress): aspect_ratio > 1.2 AND edge_density < 0.15")
-        print(f"    条件: {aspect_ratio:.4f} > 1.2 = {aspect_ratio > 1.2}, {edge_density:.4f} < 0.15 = {edge_density < 0.15}")
-        print(f"    匹配: {'✅' if dress_match else '❌'}")
-        
-        # 规则2: pants
-        pants_match = aspect_ratio > 1.1 and edge_density >= 0.15
-        print(f"  规则2 (pants): aspect_ratio > 1.1 AND edge_density >= 0.15")
-        print(f"    条件: {aspect_ratio:.4f} > 1.1 = {aspect_ratio > 1.1}, {edge_density:.4f} >= 0.15 = {edge_density >= 0.15}")
-        print(f"    匹配: {'✅' if pants_match else '❌'}")
-        
-        # 规则3: sweater (更新的条件)
-        sweater_match = aspect_ratio == 1.0 and edge_density < 0.105 and color_variance < 15
-        print(f"  规则3 (sweater): aspect_ratio == 1.0 AND edge_density < 0.105 AND color_variance < 15")
-        print(f"    条件: {aspect_ratio:.4f} == 1.0 = {aspect_ratio == 1.0}, {edge_density:.4f} < 0.105 = {edge_density < 0.105}, {color_variance:.4f} < 15 = {color_variance < 15}")
-        print(f"    匹配: {'✅' if sweater_match else '❌'}")
-        
-        # 规则4: shorts
-        shorts_match = aspect_ratio == 1.0 and color_variance < 19
-        print(f"  规则4 (shorts): aspect_ratio == 1.0 AND color_variance < 19")
-        print(f"    条件: {aspect_ratio:.4f} == 1.0 = {aspect_ratio == 1.0}, {color_variance:.4f} < 19 = {color_variance < 19}")
-        print(f"    匹配: {'✅' if shorts_match else '❌'}")
-        
-        # 规则5: skirt
-        skirt_match = aspect_ratio == 1.0 and color_variance >= 19
-        print(f"  规则5 (skirt): aspect_ratio == 1.0 AND color_variance >= 19")
-        print(f"    条件: {aspect_ratio:.4f} == 1.0 = {aspect_ratio == 1.0}, {color_variance:.4f} >= 19 = {color_variance >= 19}")
-        print(f"    匹配: {'✅' if skirt_match else '❌'}")
-        
-        # 规则6: skirt2
-        skirt2_match = 0.8 <= aspect_ratio < 1.0 and edge_density >= 0.1
-        print(f"  规则6 (skirt2): 0.8 <= aspect_ratio < 1.0 AND edge_density >= 0.1")
-        print(f"    条件: 0.8 <= {aspect_ratio:.4f} < 1.0 = {0.8 <= aspect_ratio < 1.0}, {edge_density:.4f} >= 0.1 = {edge_density >= 0.1}")
-        print(f"    匹配: {'✅' if skirt2_match else '❌'}")
-        
-        # 规则7: jacket
-        jacket_match = aspect_ratio <= 1.1 and edge_density >= 0.12
-        print(f"  规则7 (jacket): aspect_ratio <= 1.1 AND edge_density >= 0.12")
-        print(f"    条件: {aspect_ratio:.4f} <= 1.1 = {aspect_ratio <= 1.1}, {edge_density:.4f} >= 0.12 = {edge_density >= 0.12}")
-        print(f"    匹配: {'✅' if jacket_match else '❌'}")
-        
-        # 规则8: blouse
-        blouse_match = 0.9 <= aspect_ratio <= 1.1 and edge_density < 0.12
-        print(f"  规则8 (blouse): 0.9 <= aspect_ratio <= 1.1 AND edge_density < 0.12")
-        print(f"    条件: 0.9 <= {aspect_ratio:.4f} <= 1.1 = {0.9 <= aspect_ratio <= 1.1}, {edge_density:.4f} < 0.12 = {edge_density < 0.12}")
-        print(f"    匹配: {'✅' if blouse_match else '❌'}")
-        
-        # 统计匹配的规则数量
-        matching_rules = sum([dress_match, pants_match, sweater_match, shorts_match, 
-                            skirt_match, skirt2_match, jacket_match, blouse_match])
-        print(f"\n📊 总计匹配规则数: {matching_rules}")
-        
-        if matching_rules == 0:
-            print("⚠️  警告: 没有匹配任何规则，将默认分类为 'shirt'")
-        elif matching_rules > 1:
-            print(f"⚠️  警告: 匹配了多个规则，可能存在规则重叠问题")
+        # 显示分类结果分析
+        print(f"\n💡 分类结果分析:")
+        if predicted_category != expected_category:
+            print(f"   - 分类差异: 预期 {expected_category}，实际 {predicted_category}")
+            print(f"   - 置信度: {result['confidence']:.1%}")
+            print(f"   - 建议: 高级分类器使用深度学习，可能识别出更细致的特征")
+        else:
+            print(f"   ✅ 分类正确！置信度: {result['confidence']:.1%}")
         
         return {
             'image_path': image_path,
             'expected': expected_category,
             'predicted': predicted_category,
             'correct': predicted_category == expected_category,
-            'features': features,
-            'matching_rules': matching_rules
+            'confidence': result['confidence']
         }
         
     except Exception as e:

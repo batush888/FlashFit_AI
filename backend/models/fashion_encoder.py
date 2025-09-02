@@ -1,34 +1,86 @@
 from .clip_encoder import CLIPEncoder
-from typing import Optional, List, Union
+from typing import Optional, List, Union, Dict, Any
 import numpy as np
 from PIL import Image
 import torch
+from sentence_transformers import SentenceTransformer
+import nltk
+import jieba
+import re
+from collections import Counter
+import json
+from pathlib import Path
+
+# Download required NLTK data
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt', quiet=True)
+    
+try:
+    nltk.data.find('corpora/stopwords')
+except LookupError:
+    nltk.download('stopwords', quiet=True)
+    
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 
 class FashionEncoder(CLIPEncoder):
     """
-    Fashion-specific encoder that extends CLIPEncoder.
+    Enhanced Fashion-specific encoder that extends CLIPEncoder with advanced NLP capabilities.
     
-    For MVP, this uses the same CLIP model as the base encoder.
-    In the future, this can be replaced with a fashion-tuned model
-    or a specialized fashion encoder trained on fashion datasets.
+    Features:
+    - CLIP-based visual encoding
+    - Sentence transformers for semantic text understanding
+    - Multi-language support (English/Chinese) with NLTK and jieba
+    - Fashion-specific text processing and attribute extraction
+    - Advanced similarity computation with multiple modalities
     """
     
     def __init__(self, model_name: str = "ViT-B-32", pretrained: str = "openai", 
-                 device: Optional[str] = None):
+                 device: Optional[str] = None, sentence_model: str = "all-MiniLM-L6-v2"):
         """
-        Initialize fashion-specific encoder
+        Initialize enhanced fashion-specific encoder
         
         Args:
             model_name: CLIP model architecture
             pretrained: Pretrained weights to use
             device: Device to run model on
+            sentence_model: Sentence transformer model for text encoding
         """
-        # For now, use the same CLIP model
-        # TODO: Replace with fashion-tuned model when available
+        # Initialize base CLIP encoder
         super().__init__(model_name=model_name, pretrained=pretrained, device=device)
         
-        print(f"FashionEncoder initialized (using {model_name} with {pretrained} weights)")
-        print("Note: Currently using general CLIP model. Consider fine-tuning on fashion data.")
+        # Initialize sentence transformer for advanced text processing
+        try:
+            self.sentence_model = SentenceTransformer(sentence_model)
+            print(f"Sentence transformer '{sentence_model}' loaded successfully")
+        except Exception as e:
+            print(f"Warning: Could not load sentence transformer: {e}")
+            self.sentence_model = None
+        
+        # Initialize stopwords for text processing
+        try:
+            self.english_stopwords = set(stopwords.words('english'))
+        except:
+            self.english_stopwords = set()
+            
+        # Fashion-specific vocabulary and attributes
+        self.fashion_attributes = {
+            'colors': ['black', 'white', 'red', 'blue', 'green', 'yellow', 'pink', 'purple', 
+                      'brown', 'gray', 'grey', 'orange', 'navy', 'beige', 'khaki', 'maroon'],
+            'materials': ['cotton', 'silk', 'wool', 'leather', 'denim', 'polyester', 'linen',
+                         'cashmere', 'velvet', 'satin', 'chiffon', 'lace', 'suede', 'canvas'],
+            'styles': ['casual', 'formal', 'vintage', 'modern', 'classic', 'trendy', 'bohemian',
+                      'minimalist', 'elegant', 'sporty', 'chic', 'edgy', 'romantic', 'preppy'],
+            'occasions': ['work', 'party', 'wedding', 'casual', 'formal', 'date', 'vacation',
+                         'business', 'evening', 'daytime', 'weekend', 'holiday', 'summer', 'winter']
+        }
+        
+        print(f"Enhanced FashionEncoder initialized:")
+        print(f"  - CLIP model: {model_name} with {pretrained} weights")
+        print(f"  - Sentence transformer: {sentence_model if self.sentence_model else 'Not available'}")
+        print(f"  - Multi-language NLP support: {'Enabled' if self.english_stopwords else 'Limited'}")
     
     def embed_fashion_image(self, img_path: str) -> np.ndarray:
         """
@@ -46,17 +98,134 @@ class FashionEncoder(CLIPEncoder):
     
     def embed_fashion_text(self, text: str) -> np.ndarray:
         """
-        Generate fashion-specific text embedding
+        Generate enhanced fashion-specific text embedding
         
         Args:
-            text: Fashion-related text (e.g., "red dress", "casual outfit")
+            text: Text description to embed
             
         Returns:
             Normalized embedding vector
         """
-        # For now, this is the same as regular text embedding
-        # TODO: Add fashion-specific text preprocessing
-        return self.embed_text(text)
+        # Preprocess text for fashion context
+        processed_text = self.preprocess_fashion_text(text)
+        
+        # Use sentence transformer if available for better semantic understanding
+        if self.sentence_model:
+            try:
+                embedding = self.sentence_model.encode(processed_text)
+                return embedding / np.linalg.norm(embedding)
+            except Exception as e:
+                print(f"Warning: Sentence transformer failed, falling back to CLIP: {e}")
+        
+        # Fallback to CLIP text embedding
+        return self.embed_text(processed_text)
+    
+    def preprocess_fashion_text(self, text: str) -> str:
+        """
+        Preprocess text for fashion-specific understanding
+        
+        Args:
+            text: Raw text description
+            
+        Returns:
+            Processed text optimized for fashion understanding
+        """
+        if not text:
+            return text
+            
+        # Convert to lowercase
+        text = text.lower().strip()
+        
+        # Remove extra whitespace and special characters
+        text = re.sub(r'\s+', ' ', text)
+        text = re.sub(r'[^\w\s-]', ' ', text)
+        
+        # Tokenize based on language detection
+        if self._contains_chinese(text):
+            # Use jieba for Chinese text
+            try:
+                tokens = list(jieba.cut(text))
+            except:
+                tokens = text.split()
+        else:
+            # Use NLTK for English text
+            try:
+                tokens = word_tokenize(text)
+            except:
+                tokens = text.split()
+        
+        # Remove stopwords and short tokens
+        filtered_tokens = []
+        for token in tokens:
+            if len(token) > 1 and token not in self.english_stopwords:
+                filtered_tokens.append(token)
+        
+        return ' '.join(filtered_tokens)
+    
+    def _contains_chinese(self, text: str) -> bool:
+        """
+        Check if text contains Chinese characters
+        
+        Args:
+            text: Text to check
+            
+        Returns:
+            True if text contains Chinese characters
+        """
+        return bool(re.search(r'[\u4e00-\u9fff]', text))
+    
+    def extract_fashion_attributes(self, text: str) -> Dict[str, List[str]]:
+        """
+        Extract fashion attributes from text description
+        
+        Args:
+            text: Fashion item description
+            
+        Returns:
+            Dictionary of extracted attributes by category
+        """
+        text_lower = text.lower()
+        extracted = {category: [] for category in self.fashion_attributes.keys()}
+        
+        for category, attributes in self.fashion_attributes.items():
+            for attr in attributes:
+                if attr in text_lower:
+                    extracted[category].append(attr)
+        
+        return extracted
+    
+    def compute_semantic_similarity(self, text1: str, text2: str) -> float:
+        """
+        Compute semantic similarity between two fashion descriptions
+        
+        Args:
+            text1: First text description
+            text2: Second text description
+            
+        Returns:
+            Similarity score between 0 and 1
+        """
+        if self.sentence_model:
+            try:
+                embeddings = self.sentence_model.encode([text1, text2])
+                similarity = np.dot(embeddings[0], embeddings[1]) / (
+                    np.linalg.norm(embeddings[0]) * np.linalg.norm(embeddings[1])
+                )
+                return float(similarity)
+            except Exception as e:
+                print(f"Warning: Semantic similarity computation failed: {e}")
+        
+        # Fallback to simple token overlap
+        tokens1 = set(self.preprocess_fashion_text(text1).split())
+        tokens2 = set(self.preprocess_fashion_text(text2).split())
+        
+        if not tokens1 or not tokens2:
+            return 0.0
+            
+        intersection = len(tokens1.intersection(tokens2))
+        union = len(tokens1.union(tokens2))
+        
+        return intersection / union if union > 0 else 0.0
     
     def compute_fashion_similarity(self, img_path1: str, img_path2: str) -> float:
         """

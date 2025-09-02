@@ -13,7 +13,7 @@ from pathlib import Path
 
 # Import our modules
 from models.clip_model import CLIPModel
-from models.classifier import GarmentClassifier
+from models.advanced_classifier import AdvancedGarmentClassifier
 from api.auth import AuthHandler
 from api.upload import UploadHandler
 from api.match import MatchHandler
@@ -25,12 +25,19 @@ from api.history import OutfitHistoryHandler
 from api.social import social_handler
 from services.phase2_service import get_phase2_service
 from api.ultimate_ai_handler import get_ultimate_ai_handler
+from api.generative_match import get_generative_match_handler
+from api.generative_feedback import router as generative_feedback_router
+from api.generative_monitoring import router as generative_monitoring_router
 
 app = FastAPI(
     title="FlashFit AI - 服装搭配助手",
     description="AI驱动的服装搭配建议系统",
     version="1.0.0"
 )
+
+# Include routers
+app.include_router(generative_feedback_router)
+app.include_router(generative_monitoring_router)
 
 # CORS middleware
 app.add_middleware(
@@ -60,6 +67,7 @@ fusion_match_handler = get_fusion_match_handler()
 history_handler = OutfitHistoryHandler()
 phase2_service = get_phase2_service()
 ultimate_ai_handler = get_ultimate_ai_handler()
+generative_match_handler = get_generative_match_handler()
 
 # Pydantic models
 class UserRegister(BaseModel):
@@ -155,6 +163,17 @@ class UltimateAIFeedbackRequest(BaseModel):
     liked: bool
     feedback_text: Optional[str] = None
     model_feedback: Optional[dict] = None
+
+class GenerativeMatchRequest(BaseModel):
+    query_embedding: List[float]
+    occasion: Optional[str] = None
+    diversity_factor: float = 0.1
+    top_k: int = 10
+
+class GenerativeRetrainRequest(BaseModel):
+    learning_rate: float = 1e-4
+    epochs: int = 20
+    batch_size: int = 64
 
 # Auth dependency
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
@@ -770,6 +789,92 @@ async def ultimate_ai_health():
             "status": "error",
             "message": str(e)
         }
+
+# Generative AI endpoints
+@app.post("/api/generate_compatible_embeddings")
+async def generate_compatible_embeddings(
+    request: GenerativeMatchRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Generate compatible embeddings using the MLP generator"""
+    try:
+        result = await generative_match_handler.generate_compatible_embeddings(
+            query_embedding=request.query_embedding,
+            occasion=request.occasion,
+            diversity_factor=request.diversity_factor,
+            top_k=request.top_k
+        )
+        return {
+            "success": True,
+            "generated_embeddings": result["generated_embeddings"],
+            "nearest_items": result["nearest_items"],
+            "diversity_score": result["diversity_score"],
+            "model_stats": result["model_stats"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Generation failed: {str(e)}")
+
+@app.post("/api/generative/upload_and_generate")
+async def upload_and_generate(
+    file: UploadFile = File(...),
+    occasion: Optional[str] = None,
+    diversity_factor: float = 0.1,
+    top_k: int = 10,
+    user_id: str = Depends(get_current_user)
+):
+    """Upload image and generate compatible embeddings"""
+    try:
+        result = await generative_match_handler.upload_and_generate(
+            file=file,
+            occasion=occasion,
+            diversity_factor=diversity_factor,
+            top_k=top_k
+        )
+        return {
+            "success": True,
+            "query_embedding": result["query_embedding"],
+            "generated_embeddings": result["generated_embeddings"],
+            "nearest_items": result["nearest_items"],
+            "diversity_score": result["diversity_score"],
+            "model_stats": result["model_stats"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload and generation failed: {str(e)}")
+
+@app.get("/api/generative/stats")
+async def get_generative_stats(
+    user_id: str = Depends(get_current_user)
+):
+    """Get generative model statistics"""
+    try:
+        stats = await generative_match_handler.get_model_stats()
+        return {
+            "success": True,
+            "stats": stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get stats: {str(e)}")
+
+@app.post("/api/generative/retrain")
+async def retrain_generative_model(
+    request: GenerativeRetrainRequest,
+    user_id: str = Depends(get_current_user)
+):
+    """Retrain the generative model"""
+    try:
+        result = await generative_match_handler.retrain_model(
+            learning_rate=request.learning_rate,
+            epochs=request.epochs,
+            batch_size=request.batch_size
+        )
+        return {
+            "success": True,
+            "training_loss": result["training_loss"],
+            "final_loss": result["final_loss"],
+            "epochs_completed": result["epochs_completed"]
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Retraining failed: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models.classifier import get_classifier
+from models.advanced_classifier import get_advanced_classifier
 from Standalone_Image_Analysis_Code import StandaloneGarmentAnalyzer
 from PIL import Image
 
@@ -29,7 +29,7 @@ def compare_classifiers():
     
     # 1. FlashFit AI增强版分类器
     print("\n" + "="*30 + " FlashFit AI增强版 " + "="*30)
-    flashfit_classifier = get_classifier()
+    flashfit_classifier = get_advanced_classifier()
     flashfit_result = flashfit_classifier.classify_garment(test_image, debug=False)
     
     print(f"分类: {flashfit_result['category_cn']} ({flashfit_result['category']})")

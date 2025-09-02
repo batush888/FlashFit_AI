@@ -445,7 +445,7 @@ const Wardrobe = () => {
                         </span>
                       ))}
                     </div>
-                    <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-xs text-gray-400">{new Date(item.upload_time).toLocaleDateString('zh-CN')}</span>
                   </div>
                 </>
               ) : (
@@ -495,7 +495,7 @@ const Wardrobe = () => {
                       ))}
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-400">{new Date(item.created_at).toLocaleDateString('zh-CN')}</span>
+                      <span className="text-xs text-gray-400">{new Date(item.upload_time).toLocaleDateString('zh-CN')}</span>
                       <div className="flex items-center gap-2">
                         <button className="text-blue-600 hover:text-blue-700 transition-colors">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

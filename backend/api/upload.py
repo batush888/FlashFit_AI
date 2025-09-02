@@ -4,14 +4,18 @@ import os
 import json
 from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, List
 import uuid
 import shutil
 import numpy as np
 
 # 导入我们的模型
 from models.clip_model import get_clip_model
-from models.classifier import get_classifier
+from models.advanced_classifier import get_advanced_classifier
+from models.vector_store import get_clip_store, get_blip_store, get_fashion_store
+from models.clip_encoder import get_clip_encoder
+from models.blip_captioner import get_blip_captioner
+from models.fashion_encoder import get_fashion_encoder
 
 class UploadHandler:
     """
@@ -31,6 +35,16 @@ class UploadHandler:
         
         # 最大文件大小 (5MB)
         self.max_file_size = 5 * 1024 * 1024
+        
+        # Initialize AI models and vector stores
+        self.clip_encoder = get_clip_encoder()
+        self.blip_captioner = get_blip_captioner()
+        self.fashion_encoder = get_fashion_encoder()
+        
+        # Initialize vector stores
+        self.clip_store = get_clip_store(dim=512)
+        self.blip_store = get_blip_store(dim=768)
+        self.fashion_store = get_fashion_store(dim=512)
         
         print("上传处理器初始化完成")
     
@@ -109,7 +123,7 @@ class UploadHandler:
             
             # 获取模型实例
             clip_model = get_clip_model()
-            classifier = get_classifier()
+            classifier = get_advanced_classifier()
             
             # 预处理图像 - 移除白色背景以改善分类
             img_array = np.array(image)
@@ -124,15 +138,30 @@ class UploadHandler:
             # 服装分类
             classification_result = classifier.classify_garment(image)
             
-            # CLIP特征提取
-            embeddings = clip_model.encode_image(image)
+            # Generate all AI embeddings
+            # CLIP embedding
+            clip_embedding = self.clip_encoder.embed_image(image_path)
             
-            # 生成风格关键词
-            style_keywords = classifier.get_style_keywords(classification_result)
+            # BLIP caption and embedding
+            blip_caption = self.blip_captioner.caption(image_path)
+            blip_embedding = self.blip_captioner.get_text_embedding(blip_caption)
+            
+            # Fashion-specific embedding
+            fashion_embedding = self.fashion_encoder.embed_fashion_image(image_path)
+            
+            # Legacy CLIP embedding for backward compatibility
+            legacy_embeddings = clip_model.encode_image(image)
+            
+            # 生成风格关键词 (基于分类结果)
+            style_keywords = self._generate_style_keywords(classification_result)
             
             return {
                 "classification": classification_result,
-                "embeddings": embeddings.tolist(),  # 转换为列表以便JSON序列化
+                "embeddings": legacy_embeddings.tolist(),  # Legacy for backward compatibility
+                "clip_embedding": clip_embedding.tolist(),
+                "blip_embedding": blip_embedding.tolist(),
+                "fashion_embedding": fashion_embedding.tolist(),
+                "blip_caption": blip_caption,
                 "style_keywords": style_keywords,
                 "image_size": image.size,
                 "processed_at": datetime.now().isoformat()
@@ -205,6 +234,9 @@ class UploadHandler:
             
             # 保存更新后的用户数据
             self._save_users(users)
+            
+            # Store embeddings in vector stores for AI recommendations
+            self._store_embeddings_in_vector_stores(item_record, processing_result)
             
             # 返回结果（不包含嵌入向量以减少响应大小）
             response_data = item_record.copy()
@@ -280,3 +312,77 @@ class UploadHandler:
             "category_distribution": category_counts,
             "total_users_with_items": sum(1 for user in users.values() if user.get("wardrobe_items"))
         }
+    
+    def _generate_style_keywords(self, classification_result: Dict[str, Any]) -> List[str]:
+        """
+        基于分类结果生成风格关键词
+        
+        Args:
+            classification_result: 分类结果
+            
+        Returns:
+            风格关键词列表
+        """
+        keywords = []
+        
+        # 添加服装类型
+        if "category" in classification_result:
+            keywords.append(classification_result["category"])
+        
+        # 添加颜色
+        if "dominant_colors" in classification_result:
+            for color_info in classification_result["dominant_colors"]:
+                if "name" in color_info:
+                    keywords.append(color_info["name"])
+        
+        # 基于置信度添加描述性关键词
+        confidence = classification_result.get("confidence", 0)
+        if confidence > 0.8:
+            keywords.append("清晰")
+        elif confidence < 0.5:
+            keywords.append("模糊")
+        
+        return list(set(keywords))  # 去重
+    
+    def _store_embeddings_in_vector_stores(self, item_record: Dict[str, Any], processing_result: Dict[str, Any]):
+        """
+        Store embeddings in vector stores for AI recommendations
+        
+        Args:
+            item_record: The item record with metadata
+            processing_result: The processing result containing embeddings
+        """
+        try:
+            # Prepare metadata for vector stores
+            metadata = {
+                'item_id': item_record['item_id'],
+                'user_id': item_record['user_id'],
+                'image_path': item_record['file_path'],
+                'garment_type': item_record['garment_type'],
+                'colors': item_record['colors'],
+                'style_keywords': item_record['style_keywords'],
+                'blip_caption': processing_result.get('blip_caption', ''),
+                'upload_time': item_record['upload_time']
+            }
+            
+            # Convert embeddings to numpy arrays
+            clip_embedding = np.array(processing_result['clip_embedding'])
+            blip_embedding = np.array(processing_result['blip_embedding'])
+            fashion_embedding = np.array(processing_result['fashion_embedding'])
+            
+            # Add to vector stores
+            self.clip_store.add_single(clip_embedding, metadata)
+            self.blip_store.add_single(blip_embedding, metadata)
+            self.fashion_store.add_single(fashion_embedding, metadata)
+            
+            # Save vector stores
+            self.clip_store.save()
+            self.blip_store.save()
+            self.fashion_store.save()
+            
+            print(f"Successfully stored embeddings for item {item_record['item_id']} in vector stores")
+            
+        except Exception as e:
+            print(f"Error storing embeddings in vector stores: {e}")
+            # Don't raise exception to avoid breaking the upload process
+            pass

@@ -13,13 +13,13 @@ try:
     from models.style_matcher import get_style_matcher
     ENHANCED_MODELS_AVAILABLE = True
 except ImportError:
-    # 如果增强模型不可用，回退到基础模型
+    # 如果增强模型不可用，回退到高级分类器
     from models.clip_model import get_clip_model
-    from models.classifier import get_classifier
+    from models.advanced_classifier import get_advanced_classifier
     ENHANCED_MODELS_AVAILABLE = False
     
     def get_enhanced_classifier():
-        return get_classifier()
+        return get_advanced_classifier()
     
     def get_style_matcher():
         return None

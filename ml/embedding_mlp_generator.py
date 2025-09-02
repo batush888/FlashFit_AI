@@ -15,12 +15,32 @@ import numpy as np
 import faiss
 import json
 import os
+import time
 from typing import Tuple, List, Dict, Optional
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 import pickle
+
+# Import monitoring service
+try:
+    from backend.services.generative_monitoring import get_generative_monitoring_service, monitor_performance
+    MONITORING_AVAILABLE = True
+except ImportError:
+    # Fallback for when running outside backend context
+    MONITORING_AVAILABLE = False
+    
+    def get_generative_monitoring_service():
+        return None
+    
+    class monitor_performance:
+        def __init__(self, *args, **kwargs):
+            pass
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -30,7 +50,7 @@ logger = logging.getLogger(__name__)
 class GeneratorConfig:
     """Configuration for the embedding generator."""
     embedding_dim: int = 512
-    hidden_dims: List[int] = None
+    hidden_dims: List[int] = field(default_factory=lambda: [1024, 512])
     dropout_rate: float = 0.1
     learning_rate: float = 1e-4
     batch_size: int = 64
@@ -274,6 +294,75 @@ class EmbeddingMLPGenerator:
             generated = self.model(query_tensor)
         
         return generated.cpu().numpy()
+    
+    def fine_tune(self,
+                  query_embeddings: torch.Tensor,
+                  target_embeddings: torch.Tensor,
+                  sample_weights: torch.Tensor,
+                  learning_rate: float = 1e-5,
+                  epochs: int = 10,
+                  batch_size: int = 32) -> Dict[str, List[float]]:
+        """Fine-tune the model with user feedback."""
+        # Create weighted dataset
+        dataset = PairDataset(
+            query_embeddings.cpu().numpy(),
+            target_embeddings.cpu().numpy()
+        )
+        
+        # Create dataloader
+        dataloader = DataLoader(
+            dataset,
+            batch_size=batch_size,
+            shuffle=True,
+            num_workers=2
+        )
+        
+        # Setup optimizer with lower learning rate for fine-tuning
+        optimizer = optim.AdamW(self.model.parameters(), lr=learning_rate, weight_decay=1e-5)
+        
+        # Track losses
+        fine_tune_losses = []
+        
+        self.model.train()
+        logger.info(f"Fine-tuning for {epochs} epochs with lr={learning_rate}")
+        
+        for epoch in range(epochs):
+            epoch_loss = 0.0
+            num_batches = 0
+            
+            for batch_idx, (query, target) in enumerate(dataloader):
+                query = query.to(self.config.device)
+                target = target.to(self.config.device)
+                
+                # Get corresponding weights for this batch
+                start_idx = batch_idx * batch_size
+                end_idx = min(start_idx + batch_size, len(sample_weights))
+                batch_weights = sample_weights[start_idx:end_idx].to(self.config.device)
+                
+                optimizer.zero_grad()
+                
+                pred = self.model(query)
+                loss, mse_loss, cosine_loss = self.compute_loss(pred, target)
+                
+                # Apply sample weights
+                if len(batch_weights) == len(loss) if hasattr(loss, '__len__') else 1:
+                    weighted_loss = (loss * batch_weights.mean()).mean()
+                else:
+                    weighted_loss = loss
+                
+                weighted_loss.backward()
+                optimizer.step()
+                
+                epoch_loss += weighted_loss.item()
+                num_batches += 1
+            
+            avg_loss = epoch_loss / num_batches
+            fine_tune_losses.append(avg_loss)
+            
+            if epoch % 5 == 0:
+                logger.info(f"Fine-tune Epoch {epoch+1}/{epochs} - Loss: {avg_loss:.4f}")
+        
+        return {"fine_tune_losses": fine_tune_losses}
     
     def evaluate_with_faiss(self, 
                            query_embeddings: np.ndarray, 

@@ -11,6 +11,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { name: '穿搭建议', href: '/suggestions', icon: '✨' },
     { name: '搭配历史', href: '/history', icon: '📚' },
     { name: '社交分享', href: '/social', icon: '🌟' },
+    { name: '系统监控', href: '/monitoring', icon: '📈' },
     { name: '个人资料', href: '/profile', icon: '👤' },
     { name: '设置', href: '/settings', icon: '⚙️' },
   ];

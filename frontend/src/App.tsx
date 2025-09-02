@@ -22,6 +22,7 @@ const Profile = React.lazy(() => import('@/pages/Profile'));
 const Settings = React.lazy(() => import('@/pages/Settings'));
 const History = React.lazy(() => import('@/pages/History'));
 const Social = React.lazy(() => import('@/pages/Social'));
+const MonitoringDashboard = React.lazy(() => import('@/components/MonitoringDashboard'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 
 // 加载组件
@@ -287,6 +288,16 @@ const App: React.FC = () => {
                 <ProtectedRoute>
                   <Layout>
                     <Social />
+                  </Layout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/monitoring"
+              element={
+                <ProtectedRoute>
+                  <Layout>
+                    <MonitoringDashboard />
                   </Layout>
                 </ProtectedRoute>
               }

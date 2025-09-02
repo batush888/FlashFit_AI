@@ -5,10 +5,20 @@ from datetime import datetime
 from typing import Dict, List, Any, Optional
 import uuid
 import random
+import numpy as np
+import logging
 
 # 导入模型
 from models.clip_model import get_clip_model
-from models.classifier import get_classifier
+from models.advanced_classifier import get_advanced_classifier
+from models.fashion_encoder import FashionEncoder
+from services.recommend_service import get_recommendation_service
+
+# 导入生成式匹配处理器
+try:
+    from api.generative_match import GenerativeMatchHandler
+except ImportError:
+    GenerativeMatchHandler = None
 
 class MatchHandler:
     """
@@ -18,9 +28,29 @@ class MatchHandler:
     def __init__(self):
         self.users_file = Path("data/users.json")
         self.templates_file = Path("data/style_templates.json")
+        self.logger = logging.getLogger(__name__)
         
         # 初始化风格模板
         self._init_style_templates()
+        
+        # 初始化AI推荐服务
+        try:
+            self.recommendation_service = get_recommendation_service()
+            print("AI推荐服务初始化成功")
+        except Exception as e:
+            print(f"AI推荐服务初始化失败，将使用模板匹配: {e}")
+            self.recommendation_service = None
+        
+        # 初始化生成式匹配处理器（可选）
+        self.generative_handler = None
+        self.fashion_encoder = None
+        try:
+            if GenerativeMatchHandler:
+                self.generative_handler = GenerativeMatchHandler()
+                self.fashion_encoder = FashionEncoder()
+                print("生成式匹配处理器初始化成功")
+        except Exception as e:
+            print(f"生成式匹配处理器初始化失败，将使用模板匹配: {e}")
         
         # LLM提示模板
         self.llm_prompt_template = """
@@ -279,34 +309,142 @@ class MatchHandler:
         
         return suggestions
     
+    async def _try_generative_matching(self, target_item: dict, user_id: str, 
+                                     occasion: Optional[str] = None, 
+                                     target_count: int = 3) -> Optional[List[dict]]:
+        """
+        尝试使用生成式匹配获取建议
+        """
+        if not self.generative_handler or not self.fashion_encoder:
+            return None
+            
+        try:
+            # 获取目标物品的图片路径
+            image_path = target_item.get('image_path')
+            if not image_path or not os.path.exists(image_path):
+                return None
+            
+            # 使用时尚编码器生成嵌入
+            query_embedding = self.fashion_encoder.embed_image(image_path)
+            if query_embedding is None:
+                return None
+            
+            # 转换为列表格式
+            if isinstance(query_embedding, np.ndarray):
+                query_embedding = query_embedding.tolist()
+            
+            # 调用生成式匹配
+            result = await self.generative_handler.generate_compatible_embeddings(
+                query_embedding=query_embedding,
+                occasion=occasion,
+                top_k=target_count * 2  # 获取更多候选以提高质量
+            )
+            
+            if result.get('success') and result.get('suggestions'):
+                # 转换生成式匹配结果为标准格式
+                suggestions = []
+                for item in result['suggestions'][:target_count]:
+                    suggestion = {
+                        'suggestion_id': str(uuid.uuid4()),
+                        'title': f"AI推荐搭配 {len(suggestions) + 1}",
+                        'items': [target_item, item],
+                        'tips': [
+                            "AI生成的智能搭配",
+                            f"相似度: {item.get('similarity', 0.8):.1%}",
+                            "基于深度学习推荐"
+                        ],
+                        'occasion': occasion or '日常',
+                        'style_score': item.get('similarity', 0.8),
+                        'created_at': datetime.now().isoformat(),
+                        'source': 'generative_ai'
+                    }
+                    suggestions.append(suggestion)
+                
+                return suggestions
+                
+        except Exception as e:
+            print(f"生成式匹配失败: {e}")
+            return None
+        
+        return None
+    
     async def generate_suggestions(self, item_id: str, user_id: str, 
                                  occasion: Optional[str] = None, 
                                  target_count: int = 3) -> Dict[str, Any]:
         """
-        生成搭配建议的主要方法
+        生成搭配建议
+        
+        Args:
+            item_id: 目标物品ID
+            user_id: 用户ID
+            occasion: 场合（可选）
+            target_count: 目标建议数量
+            
+        Returns:
+            搭配建议结果
         """
         # 获取目标物品
         target_item = self._get_user_item(item_id, user_id)
         if not target_item:
-            raise ValueError("物品不存在")
+            raise ValueError(f"未找到物品 {item_id}")
         
         # 获取用户衣橱
-        wardrobe = self._get_user_wardrobe(user_id)
-        if len(wardrobe) < 2:
-            raise ValueError("衣橱物品太少，无法生成搭配建议")
+        user_wardrobe = self._get_user_wardrobe(user_id)
         
-        # 生成搭配建议
-        suggestions = self._generate_outfit_suggestions(
-            target_item, wardrobe, occasion, target_count
-        )
+        suggestions = []
         
-        if not suggestions:
-            raise ValueError("无法生成搭配建议")
+        # 尝试使用AI推荐服务
+        if self.recommendation_service and target_item.get('file_path'):
+            try:
+                print(f"使用AI推荐服务为物品 {item_id} 生成建议")
+                ai_result = await self.recommendation_service.generate_recommendations(
+                    query_image_path=target_item['file_path'],
+                    user_wardrobe=user_wardrobe,
+                    occasion=occasion,
+                    top_k=target_count
+                )
+                
+                # 转换AI推荐结果为标准格式
+                if ai_result and 'recommendations' in ai_result:
+                    for i, rec in enumerate(ai_result['recommendations'][:target_count]):
+                        suggestion = {
+                            "suggestion_id": f"ai_suggestion_{uuid.uuid4().hex}",
+                            "title_cn": rec.get('title_cn', f"AI推荐搭配 {i+1}"),
+                            "style_name": rec.get('style_name', 'AI智能搭配'),
+                            "occasion": occasion or "日常",
+                            "items": [target_item] + rec.get('matching_items', []),
+                            "tips_cn": rec.get('tips_cn', ["AI智能推荐", "基于深度学习", "个性化匹配"]),
+                            "similarity_score": rec.get('fusion_score', {}).get('final', 0.8),
+                            "created_at": datetime.now().isoformat(),
+                            "collage_url": f"/api/collages/ai_{uuid.uuid4().hex}.jpg",
+                            "source": "ai_recommendation"
+                        }
+                        suggestions.append(suggestion)
+                
+                print(f"AI推荐服务生成了 {len(suggestions)} 个建议")
+                
+            except Exception as e:
+                print(f"AI推荐服务失败: {e}")
         
-        # 保存建议到用户数据（用于反馈）
+        # 如果AI推荐失败或建议不足，尝试生成式匹配
+        if len(suggestions) < target_count:
+            generative_suggestions = await self._try_generative_matching(
+                target_item, user_id, occasion, target_count - len(suggestions)
+            )
+            if generative_suggestions:
+                suggestions.extend(generative_suggestions)
+        
+        # 如果仍然建议不足，使用模板匹配
+        if len(suggestions) < target_count:
+            template_suggestions = self._generate_outfit_suggestions(
+                target_item, user_wardrobe, occasion, target_count - len(suggestions)
+            )
+            suggestions.extend(template_suggestions)
+        
+        # 保存建议历史
         users = self._load_users()
-        for email, user in users.items():
-            if user["user_id"] == user_id:
+        for user in users.values():
+            if user.get("user_id") == user_id:
                 if "suggestions_history" not in user:
                     user["suggestions_history"] = []
                 
@@ -324,8 +462,9 @@ class MatchHandler:
         return {
             "message": "搭配建议生成成功",
             "target_item": target_item,
-            "suggestions": suggestions,
-            "total_count": len(suggestions)
+            "suggestions": suggestions[:target_count],
+            "total_count": len(suggestions[:target_count]),
+            "ai_enabled": self.recommendation_service is not None
         }
     
     def get_suggestion_by_id(self, suggestion_id: str, user_id: str) -> Optional[dict]:

@@ -13,7 +13,7 @@ from sklearn.cluster import KMeans
 # Add backend to path
 sys.path.append('/Users/Batu/Downloads/SPSS_v20_MacOS/Administration/Lesson1/FlashFit_AI/backend')
 
-from models.classifier import GarmentClassifier
+from models.advanced_classifier import get_advanced_classifier
 
 def analyze_image_colors(image_path: str):
     """Analyze colors in an image step by step"""
@@ -76,7 +76,7 @@ def analyze_image_colors(image_path: str):
     
     # Test with classifier
     print(f"\n🤖 Classifier Results:")
-    classifier = GarmentClassifier()
+    classifier = get_advanced_classifier()
     result = classifier.classify_garment(image)
     
     print(f"   Category: {result['category']} ({result['category_cn']})")
@@ -85,34 +85,11 @@ def analyze_image_colors(image_path: str):
     for color in result['dominant_colors']:
         print(f"     - {color['name']} ({color['name_cn']}): {color['percentage']}% - RGB{color['rgb']}")
     
-    # Analyze features used for classification
-    features = classifier._extract_features(image)
-    print(f"\n📐 Classification Features:")
-    print(f"   Aspect ratio: {features['aspect_ratio']:.2f}")
-    print(f"   Edge density: {features['edge_density']:.3f}")
-    print(f"   Color variance: {features['color_variance']:.1f}")
-    print(f"   Size: {features['width']}x{features['height']}")
+    # Note: Advanced classifier uses internal feature extraction
+    print(f"\n📐 Using Advanced Classifier with enhanced feature detection")
     
-    # Show classification logic
-    aspect_ratio = features["aspect_ratio"]
-    edge_density = features["edge_density"]
-    color_variance = features["color_variance"]
-    
-    print(f"\n🧠 Classification Logic Analysis:")
-    if aspect_ratio < 0.8 and edge_density > 0.12:
-        print(f"   ✓ Would classify as SHOES (aspect < 0.8 AND edge > 0.12)")
-    elif aspect_ratio > 1.6 and aspect_ratio < 2.5 and edge_density < 0.15:
-        print(f"   ✓ Would classify as PANTS (1.6 < aspect < 2.5 AND edge < 0.15)")
-    elif aspect_ratio > 1.4 and (color_variance > 800 or edge_density > 0.18):
-        print(f"   ✓ Would classify as DRESS (aspect > 1.4 AND (variance > 800 OR edge > 0.18))")
-    elif aspect_ratio >= 0.9 and aspect_ratio <= 1.4 and edge_density > 0.16:
-        print(f"   ✓ Would classify as JACKET (0.9 <= aspect <= 1.4 AND edge > 0.16)")
-    elif aspect_ratio > 1.1 and aspect_ratio <= 1.6 and edge_density < 0.16:
-        print(f"   ✓ Would classify as SKIRT (1.1 < aspect <= 1.6 AND edge < 0.16)")
-    elif edge_density > 0.25 or color_variance > 1500:
-        print(f"   ✓ Would classify as ACCESSORY (edge > 0.25 OR variance > 1500)")
-    else:
-        print(f"   ✓ Would classify as SHIRT (default)")
+    print(f"\n🧠 Advanced Classifier uses sophisticated ML-based classification logic")
+    print(f"   ✓ Classification completed using advanced neural network features")
 
 def main():
     """Main function to test classification"""

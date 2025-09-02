@@ -5,7 +5,10 @@ from fastapi.testclient import TestClient
 from httpx import AsyncClient
 import tempfile
 import os
+import sys
+from pathlib import Path
 from unittest.mock import Mock, patch
+import numpy as np
 
 from main import app
 # Remove non-existent imports for now
@@ -13,6 +16,12 @@ from main import app
 # from services.auth_service import AuthService
 # from services.clothing_service import ClothingService
 # from services.ml_service import MLService
+
+# Add project directories to Python path for generative component imports
+project_root = Path(__file__).parent.parent
+ml_path = project_root.parent / "ml"
+sys.path.insert(0, str(project_root))
+sys.path.insert(0, str(ml_path))
 
 
 @pytest.fixture(scope="session")
@@ -156,21 +165,125 @@ def setup_test_environment(mock_settings, mock_redis):
     yield
 
 
+# Generative Component Fixtures
+@pytest.fixture
+def mock_generator_config():
+    """Mock configuration for embedding generator."""
+    config = Mock()
+    config.embedding_dim = 512
+    config.hidden_dims = [256, 256]
+    config.device = 'cpu'
+    config.learning_rate = 1e-3
+    config.batch_size = 32
+    config.dropout_rate = 0.1
+    return config
+
+@pytest.fixture
+def sample_embeddings():
+    """Generate sample embeddings for testing."""
+    return np.random.randn(10, 512).astype(np.float32)
+
+@pytest.fixture
+def sample_metadata():
+    """Generate sample metadata for testing."""
+    return [
+        {
+            "id": f"item_{i}",
+            "name": f"Test Item {i}",
+            "category": "fashion",
+            "brand": f"Brand {i % 3}",
+            "price": 50.0 + i * 10,
+            "tags": ["casual", "summer"] if i % 2 == 0 else ["formal", "winter"]
+        }
+        for i in range(10)
+    ]
+
+@pytest.fixture
+def mock_vector_store(sample_embeddings, sample_metadata):
+    """Mock vector store with sample data."""
+    mock_store = Mock()
+    mock_store.dim = 512
+    mock_store.items = sample_metadata
+    mock_store.add.return_value = None
+    mock_store.search.return_value = [
+        (sample_metadata[0], 0.95),
+        (sample_metadata[1], 0.90),
+        (sample_metadata[2], 0.85)
+    ]
+    mock_store.save.return_value = None
+    return mock_store
+
+@pytest.fixture
+def mock_embedding_generator():
+    """Mock embedding generator."""
+    mock_gen = Mock()
+    mock_gen.config.embedding_dim = 512
+    mock_gen.generate_embeddings.return_value = np.random.randn(5, 512).astype(np.float32)
+    mock_gen.save_model.return_value = None
+    mock_gen.load_model.return_value = None
+    mock_gen.fine_tune.return_value = 0.5
+    mock_gen.get_model_info.return_value = {
+        "parameters": 1000000,
+        "embedding_dim": 512,
+        "hidden_dims": [256, 256]
+    }
+    return mock_gen
+
+@pytest.fixture
+def mock_generative_monitoring_service():
+    """Mock generative monitoring service."""
+    mock_service = Mock()
+    mock_service.record_performance_metric.return_value = None
+    mock_service.update_health_status.return_value = None
+    mock_service.get_system_overview.return_value = {
+        "total_requests": 100,
+        "successful_requests": 95,
+        "failed_requests": 5,
+        "success_rate": 0.95,
+        "average_response_time_ms": 150.0
+    }
+    mock_service.get_component_metrics.return_value = []
+    mock_service.get_recent_alerts.return_value = []
+    return mock_service
+
+@pytest.fixture
+def test_feedback_data():
+    """Generate test feedback data."""
+    return {
+        "user_id": "test_user_123",
+        "query_embedding": [0.1] * 512,
+        "generated_embeddings": [[0.2] * 512, [0.3] * 512],
+        "user_rating": 4,
+        "feedback_type": "positive",
+        "comments": "Great recommendations!",
+        "selected_items": ["item_1", "item_3"]
+    }
+
+
 # Pytest configuration
 def pytest_configure(config):
     """Configure pytest with custom markers."""
     config.addinivalue_line(
-        "markers", "unit: mark test as a unit test"
+        "markers", "unit: mark test as unit test"
     )
     config.addinivalue_line(
-        "markers", "integration: mark test as an integration test"
+        "markers", "integration: mark test as integration test"
+    )
+    config.addinivalue_line(
+        "markers", "e2e: mark test as end-to-end test"
     )
     config.addinivalue_line(
         "markers", "slow: mark test as slow running"
     )
     config.addinivalue_line(
-        "markers", "auth: mark test as authentication related"
+        "markers", "auth: mark test as requiring authentication"
     )
     config.addinivalue_line(
-        "markers", "ml: mark test as machine learning related"
+        "markers", "ml: mark test as requiring ML models"
+    )
+    config.addinivalue_line(
+        "markers", "gpu: mark test as requiring GPU"
+    )
+    config.addinivalue_line(
+        "markers", "generative: mark test as generative component test"
     )

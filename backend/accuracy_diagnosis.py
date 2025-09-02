@@ -8,7 +8,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from models.classifier import get_classifier
+from models.advanced_classifier import get_advanced_classifier
 from PIL import Image
 import glob
 import json
@@ -21,7 +21,7 @@ def diagnose_accuracy_issues():
     print("=" * 60)
     
     # 获取分类器实例
-    classifier = get_classifier()
+    classifier = get_advanced_classifier()
     
     # 测试图像路径
     test_images = [

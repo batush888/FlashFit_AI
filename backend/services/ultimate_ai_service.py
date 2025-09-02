@@ -19,6 +19,7 @@ from models.fusion_reranker import get_fusion_reranker, FusionScore
 from models.fashion_ai_model import FashionAISystem
 from inference.fashion_predictor import FashionPredictor, create_predictor
 from generation.fashion_generator import FashionGenerator
+from models.advanced_classifier import get_advanced_classifier
 
 class UltimateAIService:
     """
@@ -62,13 +63,17 @@ class UltimateAIService:
         self.fashion_generator = None
         self._init_fashion_generator()
         
+        # Initialize Advanced Classifier
+        self.advanced_classifier = get_advanced_classifier()
+        
         # Model weights for fusion
         self.model_weights = {
-            'clip': 0.25,
-            'blip': 0.20,
-            'fashion_encoder': 0.25,
+            'clip': 0.20,
+            'blip': 0.15,
+            'fashion_encoder': 0.20,
             'fashion_ai': 0.15,
-            'fashion_predictor': 0.15
+            'fashion_predictor': 0.15,
+            'advanced_classifier': 0.15
         }
         
         print("Ultimate Fashion AI Service initialized successfully!")
@@ -220,6 +225,10 @@ class UltimateAIService:
                 predictor_analysis = await self._analyze_with_predictor(image_path)
                 analysis['predictor_analysis'] = predictor_analysis
             
+            # Advanced Classifier analysis
+            advanced_analysis = await self._analyze_with_advanced_classifier(image_path)
+            analysis['advanced_analysis'] = advanced_analysis
+            
         except Exception as e:
             print(f"Error in query analysis: {e}")
             analysis['error'] = str(e)
@@ -291,6 +300,30 @@ class UltimateAIService:
                 }
         except Exception as e:
             print(f"Fashion Predictor analysis error: {e}")
+            return {'error': str(e)}
+    
+    async def _analyze_with_advanced_classifier(self, image_path: str) -> Dict[str, Any]:
+        """Analyze image with Advanced Classifier"""
+        try:
+            if self.advanced_classifier and hasattr(self.advanced_classifier, 'classify_garment'):
+                result = self.advanced_classifier.classify_garment(image_path, debug=True)
+                return {
+                    'garment_type': result.get('garment_type', 'unknown'),
+                    'color_analysis': result.get('color_analysis', {}),
+                    'confidence': result.get('confidence', 0.0),
+                    'features': result.get('features', [0.0] * 512),
+                    'analysis_type': 'advanced_classifier'
+                }
+            else:
+                return {
+                    'garment_type': 'unknown',
+                    'color_analysis': {},
+                    'confidence': 0.0,
+                    'features': [0.0] * 512,
+                    'analysis_type': 'fallback'
+                }
+        except Exception as e:
+            print(f"Advanced Classifier analysis error: {e}")
             return {'error': str(e)}
     
     async def _generate_multi_model_candidates(self, query_analysis: Dict[str, Any], top_k: int) -> List[Dict[str, Any]]:
