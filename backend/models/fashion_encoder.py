@@ -113,7 +113,10 @@ class FashionEncoder(CLIPEncoder):
         if self.sentence_model:
             try:
                 embedding = self.sentence_model.encode(processed_text)
-                return embedding / np.linalg.norm(embedding)
+                norm = np.linalg.norm(embedding)
+                if norm > 0:
+                    return embedding / norm
+                return embedding
             except Exception as e:
                 print(f"Warning: Sentence transformer failed, falling back to CLIP: {e}")
         

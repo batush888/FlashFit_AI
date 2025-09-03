@@ -41,6 +41,14 @@ apiClient.interceptors.response.use(
       window.location.href = '/login';
     }
     
+    // 处理404错误 - 如果是profile端点，说明用户不存在，清除认证数据
+    if (error.response?.status === 404 && error.config?.url?.includes('/api/user/profile')) {
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('auth_user');
+      localStorage.removeItem('user_data');
+      window.location.href = '/login';
+    }
+    
     // 处理网络错误
     if (!error.response) {
       error.message = '网络连接失败，请检查网络设置';

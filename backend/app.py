@@ -222,6 +222,8 @@ async def get_user_profile(user_id: str = Depends(get_current_user)):
             "created_at": user_data.get("created_at"),
             "preferences": user_data.get("preferences", {})
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

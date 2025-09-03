@@ -46,6 +46,7 @@ const Suggestions = () => {
   const [outfitSuggestions, setOutfitSuggestions] = useState<OutfitSuggestion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [retryFunction, setRetryFunction] = useState<(() => void) | null>(null);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -90,8 +91,10 @@ const Suggestions = () => {
 
     try {
        const response = await matchService.generateFusionRecommendations(uploadedImage, 5);
+       console.log('Fusion API Response:', response.data);
+       
        if (response.data?.suggestions) {
-         // Map API response to OutfitSuggestion format
+         // Map fusion API response to OutfitSuggestion format
           const mappedSuggestions: OutfitSuggestion[] = response.data.suggestions.map((suggestion: any, index: number) => ({
             id: suggestion.id || `fusion-${Date.now()}-${index}`,
             title_cn: suggestion.title_cn || suggestion.name || '融合搭配建议',
@@ -99,16 +102,16 @@ const Suggestions = () => {
             occasion: suggestion.occasion || 'casual',
             weather: suggestion.weather || 'all',
             style: suggestion.style || 'trendy',
-            items: suggestion.items?.map((item: any) => ({
-              id: item.id || item.item_id || `item-${index}`,
-              name: item.name || item.garment_type_cn || '服装单品',
-              category: item.category || item.garment_type || 'clothing',
-              image: item.image || item.url || '/placeholder.jpg'
-            })) || [],
-            confidence: suggestion.confidence || suggestion.similarity_score || 0.85,
+            items: [{
+              id: suggestion.id || `fusion-item-${index}`,
+              name: suggestion.metadata?.category || '推荐单品',
+              category: suggestion.metadata?.type || 'clothing',
+              image: suggestion.img_url || '/placeholder.jpg'
+            }],
+            confidence: Math.round((suggestion.scores?.final || 0.85) * 100),
             tags: suggestion.tags || ['AI推荐', '融合搭配'],
-            similarity_score: suggestion.similarity_score || suggestion.confidence || 0.85,
-            tips_cn: suggestion.tips_cn || suggestion.tips || ['基于图片生成的个性化搭配']
+            similarity_score: suggestion.scores?.final || 0.85,
+            tips_cn: [`CLIP评分: ${(suggestion.scores?.clip || 0).toFixed(2)}`, `BLIP评分: ${(suggestion.scores?.blip || 0).toFixed(2)}`, `时尚评分: ${(suggestion.scores?.fashion || 0).toFixed(2)}`]
           }));
          
          setOutfitSuggestions(mappedSuggestions);
@@ -122,6 +125,7 @@ const Suggestions = () => {
     } catch (error) {
       console.error('Fusion recommendations error:', error);
       setError('生成融合建议失败，请稍后重试');
+      setRetryFunction(() => () => generateFusionRecommendations());
       addNotification({
         type: 'error',
         title: '错误',
@@ -176,25 +180,27 @@ const Suggestions = () => {
         target_count: 5
       });
       
+      console.log('Match API Response:', response.data);
+      
       if (response.data?.suggestions) {
-        // Map API response to OutfitSuggestion format
+        // Map wardrobe API response to OutfitSuggestion format
         const mappedSuggestions: OutfitSuggestion[] = response.data.suggestions.map((suggestion: any, index: number) => ({
-          id: suggestion.id || `match-${Date.now()}-${index}`,
-          title_cn: suggestion.title_cn || suggestion.name || '搭配建议',
-          name: suggestion.name || suggestion.title_cn || '搭配建议',
+          id: suggestion.suggestion_id || `match-${Date.now()}-${index}`,
+          title_cn: suggestion.title_cn || suggestion.style_name || '搭配建议',
+          name: suggestion.title_cn || suggestion.style_name || '搭配建议',
           occasion: suggestion.occasion || selectedOccasion || 'casual',
           weather: suggestion.weather || selectedWeather || 'all',
-          style: suggestion.style || 'casual',
+          style: suggestion.style_name || 'casual',
           items: suggestion.items?.map((item: any) => ({
-            id: item.id || item.item_id || `item-${index}`,
-            name: item.name || item.garment_type_cn || '服装单品',
-            category: item.category || item.garment_type || 'clothing',
-            image: item.image || item.url || '/placeholder.jpg'
+            id: item.item_id || item.id || `item-${index}`,
+            name: item.garment_type_cn || item.name || '服装单品',
+            category: item.garment_type || item.category || 'clothing',
+            image: item.url || item.image || '/placeholder.jpg'
           })) || [],
-          confidence: suggestion.confidence || suggestion.similarity_score || 0.85,
+          confidence: Math.round((suggestion.similarity_score || 0.85) * 100),
           tags: suggestion.tags || ['AI推荐', '衣橱搭配'],
-          similarity_score: suggestion.similarity_score || suggestion.confidence || 0.85,
-          tips_cn: suggestion.tips_cn || suggestion.tips || ['基于您的衣橱生成的搭配建议']
+          similarity_score: suggestion.similarity_score || 0.85,
+          tips_cn: suggestion.tips_cn || ['基于您的衣橱生成的搭配建议']
         }));
         
         setOutfitSuggestions(mappedSuggestions);
@@ -208,6 +214,7 @@ const Suggestions = () => {
     } catch (error) {
       console.error('Match recommendations error:', error);
       setError('生成衣橱搭配失败，显示默认建议');
+      setRetryFunction(() => () => generateMatchRecommendations());
       // 显示默认建议
        await generateFallbackRecommendations();
       addNotification({
@@ -316,11 +323,25 @@ const Suggestions = () => {
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 rounded-2xl p-4 text-red-700">
-          <div className="flex items-center">
-            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            {error}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {error}
+            </div>
+            {retryFunction && (
+              <button
+                onClick={() => {
+                  setError(null);
+                  setRetryFunction(null);
+                  retryFunction();
+                }}
+                className="ml-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                重试
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -498,24 +519,45 @@ const Suggestions = () => {
 
               {/* Outfit Items */}
               <div className="px-6 pb-6">
-                <div className="grid grid-cols-3 gap-3">
-                  {suggestion.items.map((item, itemIndex) => (
-                    <div
-                      key={item.id}
-                      className="group/item relative"
-                    >
-                      <div className="aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden">
-                        <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                          <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
+                {suggestion.items && suggestion.items.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-3">
+                    {suggestion.items.map((item, itemIndex) => (
+                      <div
+                        key={item.id}
+                        className="group/item relative"
+                      >
+                        <div className="aspect-[3/4] bg-gray-100 rounded-xl overflow-hidden">
+                          {item.image && item.image !== '/placeholder.jpg' ? (
+                            <img
+                              src={item.image.startsWith('http') ? item.image : `http://localhost:8080${item.image}`}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = 'none';
+                                target.nextElementSibling?.classList.remove('hidden');
+                              }}
+                            />
+                          ) : null}
+                          <div className={`w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center ${item.image && item.image !== '/placeholder.jpg' ? 'hidden' : ''}`}>
+                            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
+                          </div>
+                          <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-colors"></div>
                         </div>
-                        <div className="absolute inset-0 bg-black/0 group-hover/item:bg-black/10 transition-colors"></div>
+                        <p className="text-xs text-gray-600 mt-2 text-center truncate">{item.name}</p>
                       </div>
-                      <p className="text-xs text-gray-600 mt-2 text-center truncate">{item.name}</p>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <svg className="w-12 h-12 mx-auto mb-2 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                    </svg>
+                    <p>暂无搭配单品</p>
+                  </div>
+                )}
               </div>
 
               {/* Actions */}
